@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="دفتر حقوقی">
+<meta name="theme-color" content="#1a3c5e">
+<link rel="manifest" href="manifest.json">
+<title>سامانه مدیریت دفتر حقوقی</title>
+<style>
+/* ===== LOGIN PAGE ===== */
+.login-page{
+  position:fixed;inset:0;background:linear-gradient(135deg,#0f2540,#1a3c5e,#2563a8);
+  display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;
+}
+.login-box{
+  background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:420px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .icon{font-size:48px;margin-bottom:10px}
+.login-logo h1{font-size:20px;font-weight:800;color:#1a3c5e;margin-bottom:4px}
+.login-logo p{font-size:12px;color:#6b7280}
+.login-tabs{display:flex;background:#f4f6f9;border-radius:10px;padding:4px;margin-bottom:24px}
+.login-tab{flex:1;padding:8px;border:none;background:transparent;border-radius:7px;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;transition:all .2s}
+.login-tab.active{background:#fff;color:#1a3c5e;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.login-error{background:#fee2e2;color:#7f1d1d;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
+.login-error.show{display:block}
+</style>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#1a3c5e;--pl:#2563a8;--accent:#c8a84b;--bg:#f4f6f9;
+  --sidebar:#0f2540;--white:#fff;--text:#1e2a3a;--muted:#6b7280;
+  --border:#e2e8f0;--success:#16a34a;--warn:#d97706;--danger:#dc2626;
+  --info:#0284c7;--shadow:0 2px 12px rgba(0,0,0,.08);--r:12px
+}
+body{font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+button,input,select,textarea{font-family:inherit;outline:none}
+button{cursor:pointer}
+
+/* LAYOUT */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:255px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;right:0;top:0;bottom:0;z-index:100}
+.main{margin-right:255px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.content{padding:24px;flex:1}
+
+/* SIDEBAR */
+.s-logo{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.s-logo-icon{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.s-logo h2{color:#fff;font-size:14px;font-weight:700}
+.s-logo p{color:rgba(255,255,255,.4);font-size:10px;margin-top:2px}
+.s-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.s-sec{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:1px;padding:12px 8px 4px;text-transform:uppercase}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:2px;border:none;background:none;width:100%;text-align:right}
+.nav-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-btn.active{background:var(--pl);color:#fff}
+.nav-btn .ni{font-size:15px;width:20px;text-align:center}
+.nav-btn .nb{margin-right:auto;background:var(--accent);color:var(--primary);font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+.s-user{padding:14px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.s-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--primary);flex-shrink:0}
+.s-uname{color:#fff;font-size:13px;font-weight:600}
+.s-urole{color:rgba(255,255,255,.4);font-size:11px}
+
+/* TOPBAR */
+.tb-title{font-size:17px;font-weight:700;color:var(--primary)}
+.tb-actions{display:flex;align-items:center;gap:10px}
+.tb-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all .2s;position:relative}
+.tb-btn:hover{background:var(--bg)}
+.nb-dot{position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:var(--danger);border-radius:50%;font-size:9px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.tb-date{font-size:12px;color:var(--muted)}
+
+/* ROLE SWITCHER */
+.role-sw{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:8px}
+.role-btn{padding:5px 12px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
+.role-btn.active{background:#fff;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:20px;border:1px solid var(--border)}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;color:var(--primary)}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+.stat-card{background:#fff;border-radius:var(--r);padding:18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;border:1px solid var(--border);border-right:4px solid var(--pl)}
+.stat-card.g{border-right-color:var(--success)}
+.stat-card.gold{border-right-color:var(--accent)}
+.stat-card.r{border-right-color:var(--danger)}
+.stat-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ic-b{background:#e0f0ff}.ic-g{background:#dcfce7}.ic-gold{background:#fef9c3}.ic-r{background:#fee2e2}
+.stat-num{font-size:26px;font-weight:800;color:var(--text);line-height:1}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:#f8fafc;padding:10px 12px;text-align:right;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);font-size:11px}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:hover{background:#f8fafc}
+tbody td{padding:10px 12px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-active{background:#dcfce7;color:#16a34a}
+.b-pending{background:#fef9c3;color:#92400e}
+.b-closed{background:#f1f5f9;color:#475569}
+.b-urgent{background:#fee2e2;color:#dc2626}
+.b-purple{background:#ede9fe;color:#6d28d9}
+.b-blue{background:#e0f0ff;color:#0284c7}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.btn-p{background:var(--pl);color:#fff}.btn-p:hover{background:var(--primary)}
+.btn-a{background:var(--accent);color:var(--primary)}.btn-a:hover{opacity:.9}
+.btn-o{background:#fff;border:1.5px solid var(--border);color:var(--text)}.btn-o:hover{border-color:var(--pl);color:var(--pl)}
+.btn-d{background:var(--danger);color:#fff}.btn-d:hover{background:#b91c1c}
+.btn-s{background:var(--success);color:#fff}
+.btn-sm{padding:5px 11px;font-size:11px}
+
+/* FORMS */
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px}
+.fc{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:#fff;color:var(--text);transition:border-color .2s}
+.fc:focus{border-color:var(--pl);box-shadow:0 0 0 3px rgba(37,99,168,.1)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);transform:scale(.95);transition:transform .2s}
+.overlay.open .modal{transform:scale(1)}
+.mh{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.mt{font-size:15px;font-weight:700;color:var(--primary)}
+.mc{width:30px;height:30px;border-radius:50%;border:none;background:var(--bg);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mb{padding:20px 22px}
+.mf{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* NOTIFICATIONS PANEL */
+.notif-panel{position:fixed;top:60px;left:20px;width:320px;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:500;display:none;border:1px solid var(--border)}
+.notif-panel.open{display:block}
+.np-hd{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.ni-item{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;cursor:pointer;transition:background .15s}
+.ni-item:hover{background:#f8fafc}
+.ni-item:last-child{border-bottom:none}
+.ni-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.ni-text{font-size:12px;line-height:1.5;color:var(--text)}
+.ni-time{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* TIMELINE */
+.timeline{position:relative;padding-right:24px}
+.timeline::before{content:'';position:absolute;right:7px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:18px}
+.tl-dot{position:absolute;right:-24px;top:4px;width:16px;height:16px;border-radius:50%;background:var(--pl);border:3px solid #fff;box-shadow:0 0 0 2px var(--pl)}
+.tl-body{background:var(--bg);border-radius:8px;padding:10px 12px;border:1px solid var(--border)}
+.tl-date{font-size:10px;color:var(--muted);margin-bottom:3px}
+.tl-text{font-size:13px}
+
+/* TASK ITEMS */
+.task-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:7px;background:#f8fafc;border:1px solid var(--border);transition:all .15s}
+.task-item:hover{border-color:var(--pl)}
+.task-item.done{opacity:.5}
+.t-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s;font-size:11px}
+.task-item.done .t-check{background:var(--success);border-color:var(--success);color:#fff}
+.t-text{flex:1;font-size:13px}
+.task-item.done .t-text{text-decoration:line-through;color:var(--muted)}
+.t-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ph{background:var(--danger)}.pm{background:var(--warn)}.pl{background:var(--success)}
+
+/* CHART */
+.chart-wrap{display:flex;align-items:flex-end;gap:6px;height:110px}
+.c-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.c-bar{width:100%;background:var(--pl);border-radius:5px 5px 0 0;opacity:.8;transition:all .3s}
+.c-bar:hover{opacity:1}
+.c-lbl{font-size:9px;color:var(--muted)}
+.c-val{font-size:9px;font-weight:700;color:var(--primary)}
+
+/* PROGRESS */
+.prog-bar{height:6px;background:var(--border);border-radius:10px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:10px;background:var(--pl);transition:width .5s}
+
+/* TABS */
+.tab-bar{display:flex;gap:2px;margin-bottom:18px;border-bottom:2px solid var(--border)}
+.tab-btn{padding:9px 16px;border:none;background:none;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-weight:600;transition:all .15s}
+.tab-btn.active{color:var(--pl);border-bottom-color:var(--pl)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ALERT */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;border-right:4px solid}
+.al-i{background:#e0f0ff;border-color:var(--info);color:#0c4a6e}
+.al-s{background:#dcfce7;border-color:var(--success);color:#14532d}
+.al-w{background:#fef9c3;border-color:var(--warn);color:#78350f}
+.al-d{background:#fee2e2;border-color:var(--danger);color:#7f1d1d}
+
+/* UPLOAD */
+.upload-area{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;color:var(--muted)}
+.upload-area:hover{border-color:var(--pl);background:#f0f7ff}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:50px;margin-bottom:12px;opacity:.35}
+.empty h3{font-size:15px;color:var(--text);margin-bottom:6px}
+.empty p{font-size:12px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .g2,.g3{grid-template-columns:1fr}
+  .fr3{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  /* sidebar به overlay تبدیل میشه */
+  .sidebar{
+    transform:translateX(110%);transition:transform .3s;
+    box-shadow:-4px 0 20px rgba(0,0,0,.3);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+    z-index:99;
+  }
+  .sidebar-overlay.open{display:block}
+  .main{margin-right:0}
+  .content{padding:14px 12px 90px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .stat-card{padding:12px;gap:10px}
+  .stat-num{font-size:20px}
+  .stat-icon{width:38px;height:38px;font-size:16px}
+  .topbar{padding:10px 14px}
+  .tb-title{font-size:15px}
+  .tb-date{display:none}
+  .role-sw{display:none}
+  /* bottom nav */
+  .bottom-nav{display:flex}
+  .card{padding:14px}
+  .modal{border-radius:16px 16px 0 0;max-height:92vh;position:fixed;bottom:0;left:0;right:0;max-width:100%}
+  .overlay{align-items:flex-end;padding:0}
+  .fr,.fr3{grid-template-columns:1fr}
+  table{font-size:12px}
+  thead th,tbody td{padding:8px 8px}
+  .g2{grid-template-columns:1fr}
+}
+
+/* BOTTOM NAVIGATION - فقط موبایل */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:1px solid var(--border);
+  z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);
+  box-shadow:0 -2px 12px rgba(0,0,0,.1);
+}
+.bn-items{display:flex;justify-content:space-around;align-items:center}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 10px;border-radius:10px;cursor:pointer;
+  color:var(--muted);font-size:10px;font-weight:600;
+  transition:all .2s;border:none;background:none;min-width:52px;
+}
+.bn-item.active{color:var(--pl)}
+.bn-item .bn-icon{font-size:20px;line-height:1}
+.bn-menu-btn{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--pl);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;border:none;cursor:pointer;
+  box-shadow:0 4px 12px rgba(37,99,168,.4);
+  margin-top:-18px;
+}
+/* hamburger topbar */
+.topbar-menu-btn{
+  display:none;width:36px;height:36px;border:none;background:none;
+  font-size:22px;cursor:pointer;color:var(--primary);
+}
+@media(max-width:640px){
+  .topbar-menu-btn{display:flex;align-items:center;justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN PAGE ===== -->
+<div class="login-page" id="login-page" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">⚖️</div>
+      <h1>سامانه مدیریت دفتر حقوقی</h1>
+      <p>ورود به پنل مدیریت</p>
+    </div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab('login',this)">ورود</button>
+      <button class="login-tab" onclick="switchLoginTab('register',this)">ثبت‌نام</button>
+    </div>
+    <div id="login-error" class="login-error"></div>
+    <div id="login-form">
+      <div class="fg"><label class="fl">ایمیل</label><input class="fc" id="login-email" type="email" value="admin@legal.ir"></div>
+      <div class="fg"><label class="fl">رمز عبور</label><input class="fc" id="login-pass" type="password" value="admin123" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center;padding:12px;font-size:14px;margin-top:6px" onclick="doLogin()">ورود به سیستم</button>
+      <p style="text-align:center;font-size:12px;color:#6b7280;margin-top:12px">ایمیل: admin@legal.ir | رمز: admin123</p>
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="fg"><label class="fl">نام کامل</label><input class="fc" id="reg-name" placeholder="نام و نام خانوادگی"></div>
+      <div class="fg"><label class="fl">ایمیل</label><input class="fc" id="reg-email" type="email" placeholder="email@example.com"></div>
+      <div class="fg"><label class="fl">رمز عبور</label><input class="fc" id="reg-pass" type="password" placeholder="حداقل ۶ کاراکتر"></div>
+      <div class="fg"><label class="fl">نقش</label>
+        <select class="fc" id="reg-role">
+          <option value="lawyer">وکیل</option>
+          <option value="secretary">منشی</option>
+          <option value="trainee">کارآموز</option>
+        </select>
+      </div>
+      <button class="btn btn-p" style="width:100%;justify-content:center;padding:12px;font-size:14px;margin-top:6px" onclick="doRegister()">ثبت‌نام</button>
+    </div>
+  </div>
+</div>
+<div class="layout">
+<!-- sidebar overlay برای موبایل -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="s-logo">
+    <div class="s-logo-icon">⚖️</div>
+    <div>
+      <h2>دفتر حقوقی</h2>
+      <p>سامانه مدیریت</p>
+    </div>
+  </div>
+  <div class="s-nav">
+    <div class="s-sec">منوی اصلی</div>
+    <button class="nav-btn active" onclick="showPage('dashboard',this)"><span class="ni">🏠</span>داشبورد</button>
+    <button class="nav-btn" onclick="showPage('cases',this)"><span class="ni">📁</span>پرونده‌ها<span class="nb" id="nb-cases">12</span></button>
+    <button class="nav-btn" onclick="showPage('clients',this)"><span class="ni">👥</span>موکلین</button>
+    <button class="nav-btn" onclick="showPage('calendar',this)"><span class="ni">📅</span>تقویم<span class="nb" id="nb-cal">3</span></button>
+    <button class="nav-btn" onclick="showPage('tasks',this)"><span class="ni">✅</span>وظایف<span class="nb" id="nb-tasks">5</span></button>
+    <div class="s-sec">خدمات</div>
+    <button class="nav-btn" onclick="showPage('documents',this)"><span class="ni">📄</span>اسناد</button>
+    <button class="nav-btn" onclick="showPage('finance',this)"><span class="ni">💰</span>امور مالی</button>
+    <button class="nav-btn" onclick="showPage('templates',this)"><span class="ni">📝</span>قالب‌های حقوقی</button>
+    <button class="nav-btn" onclick="showPage('laws',this)"><span class="ni">📚</span>قوانین</button>
+    <div class="s-sec">سیستم</div>
+    <button class="nav-btn" onclick="showPage('reports',this)"><span class="ni">📊</span>گزارش‌ها</button>
+    <button class="nav-btn" onclick="showPage('messages',this)"><span class="ni">💬</span>پیام‌ها<span class="nb" id="nb-msg">2</span></button>
+    <button class="nav-btn" onclick="showPage('settings',this)"><span class="ni">⚙️</span>تنظیمات</button>
+    <button class="nav-btn" onclick="doLogout()" style="color:#ff8080"><span class="ni">🚪</span>خروج از حساب</button>
+  </div>
+  <div class="s-user">
+    <div class="s-avatar">ع</div>
+    <div>
+      <div class="s-uname">علی رضایی</div>
+      <div class="s-urole" id="current-role-label">وکیل دادگستری</div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:14px">
+      <button class="topbar-menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="tb-title" id="page-title">داشبورد</div>
+    </div>
+    <div class="tb-actions">
+      <div class="role-sw">
+        <button class="role-btn active" onclick="switchRole('lawyer',this)">وکیل</button>
+        <button class="role-btn" onclick="switchRole('client',this)">موکل</button>
+        <button class="role-btn" onclick="switchRole('admin',this)">مدیر</button>
+      </div>
+      <div class="tb-date" id="today-date"></div>
+      <button class="tb-btn" onclick="toggleNotif()" title="اعلان‌ها">
+        🔔<span class="nb-dot" id="notif-count">4</span>
+      </button>
+      <button class="tb-btn" onclick="showPage('settings',null)" title="تنظیمات">👤</button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION PANEL -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="np-hd">اعلان‌ها <button class="btn btn-sm btn-o" onclick="closeNotif()">بستن</button></div>
+    <div id="notif-list"></div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="g2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">📅 جلسات امروز</div>
+            <button class="btn btn-sm btn-p" onclick="showPage('calendar',null)">مشاهده همه</button>
+          </div>
+          <div id="today-sessions"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">✅ وظایف امروز</div>
+            <button class="btn btn-sm btn-p" onclick="showPage('tasks',null)">مشاهده همه</button>
+          </div>
+          <div id="today-tasks"></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">📁 آخرین پرونده‌ها</div>
+            <button class="btn btn-sm btn-p" onclick="showPage('cases',null)">همه پرونده‌ها</button>
+          </div>
+          <div id="recent-cases"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">📊 درآمد ماهانه</div></div>
+          <div class="chart-wrap" id="income-chart"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12px;color:var(--muted)" id="chart-labels"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CASES ===== -->
+    <div class="page" id="page-cases">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input class="fc" style="width:220px" placeholder="🔍 جستجو در پرونده‌ها..." oninput="filterCases(this.value)" id="case-search">
+          <select class="fc" style="width:150px" onchange="filterCaseStatus(this.value)" id="case-status-filter">
+            <option value="">همه وضعیت‌ها</option>
+            <option value="active">در حال رسیدگی</option>
+            <option value="pending">در انتظار</option>
+            <option value="closed">مختومه</option>
+            <option value="appeal">تجدیدنظر</option>
+          </select>
+        </div>
+        <button class="btn btn-p" onclick="openModal('modal-add-case')">➕ پرونده جدید</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>شماره پرونده</th><th>موضوع</th><th>موکل</th><th>طرف مقابل</th>
+                <th>وضعیت</th><th>تاریخ ثبت</th><th>جلسه بعدی</th><th>عملیات</th>
+              </tr>
+            </thead>
+            <tbody id="cases-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CLIENTS ===== -->
+    <div class="page" id="page-clients">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <input class="fc" style="width:240px" placeholder="🔍 جستجوی موکل..." oninput="filterClients(this.value)" id="client-search">
+        <button class="btn btn-p" onclick="openModal('modal-add-client')">➕ موکل جدید</button>
+      </div>
+      <div class="g3" id="clients-grid"></div>
+    </div>
+
+    <!-- ===== CALENDAR ===== -->
+    <div class="page" id="page-calendar">
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">📅 تقویم</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-o" onclick="prevMonth()">◀</button>
+              <span id="cal-month-label" style="font-weight:700;font-size:13px;align-self:center"></span>
+              <button class="btn btn-sm btn-o" onclick="nextMonth()">▶</button>
+            </div>
+          </div>
+          <div id="calendar-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">📋 رویدادها</div>
+            <button class="btn btn-sm btn-p" onclick="openModal('modal-add-event')">➕ افزودن</button>
+          </div>
+          <div id="events-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TASKS ===== -->
+    <div class="page" id="page-tasks">
+      <div class="g2">
+        <div>
+          <div class="card" style="margin-bottom:18px">
+            <div class="card-hd">
+              <div class="card-title">📋 وظایف امروز</div>
+              <button class="btn btn-sm btn-p" onclick="openModal('modal-add-task')">➕ وظیفه جدید</button>
+            </div>
+            <div id="tasks-list"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">📊 خلاصه وظایف</div></div>
+          <div id="task-summary"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DOCUMENTS ===== -->
+    <div class="page" id="page-documents">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <input class="fc" style="width:240px" placeholder="🔍 جستجو در اسناد..." id="doc-search" oninput="filterDocs(this.value)">
+        <button class="btn btn-p" onclick="openModal('modal-add-doc')">📤 بارگذاری سند</button>
+      </div>
+      <div class="g3" id="docs-grid"></div>
+    </div>
+
+    <!-- ===== FINANCE ===== -->
+    <div class="page" id="page-finance">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)" id="finance-stats"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">💰 تراکنش‌ها</div>
+            <button class="btn btn-sm btn-p" onclick="openModal('modal-add-finance')">➕ ثبت تراکنش</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>تاریخ</th><th>شرح</th><th>موکل</th><th>نوع</th><th>مبلغ</th><th>وضعیت</th></tr></thead>
+              <tbody id="finance-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">📊 نمودار درآمد</div></div>
+          <div class="chart-wrap" id="finance-chart"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TEMPLATES ===== -->
+    <div class="page" id="page-templates">
+      <div class="alert al-i">💡 قالب‌های آماده را انتخاب کنید و اطلاعات موکل به‌صورت خودکار جایگزین می‌شود.</div>
+      <div class="g3" id="templates-grid"></div>
+    </div>
+
+    <!-- ===== LAWS ===== -->
+    <div class="page" id="page-laws">
+      <div class="card" style="margin-bottom:18px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input class="fc" style="flex:1;min-width:200px" placeholder="🔍 جستجو در قوانین و آرا..." id="law-search" oninput="filterLaws(this.value)">
+          <select class="fc" style="width:180px" onchange="filterLawCat(this.value)" id="law-cat">
+            <option value="">همه دسته‌ها</option>
+            <option value="civil">قانون مدنی</option>
+            <option value="criminal">قانون مجازات</option>
+            <option value="procedure">آیین دادرسی</option>
+            <option value="unity">رأی وحدت رویه</option>
+            <option value="advisory">نظریه مشورتی</option>
+          </select>
+        </div>
+      </div>
+      <div id="laws-list"></div>
+    </div>
+
+    <!-- ===== REPORTS ===== -->
+    <div class="page" id="page-reports">
+      <div class="g2" style="margin-bottom:18px">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">📊 پرونده‌ها بر اساس نوع</div></div>
+          <div id="report-by-type"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">📈 نرخ موفقیت</div></div>
+          <div id="report-success"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📋 گزارش کامل پرونده‌ها</div></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>ماه</th><th>تعداد پرونده</th><th>مختومه</th><th>درآمد</th><th>نرخ موفقیت</th></tr></thead>
+            <tbody id="report-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MESSAGES ===== -->
+    <div class="page" id="page-messages">
+      <div class="g2" style="height:500px">
+        <div class="card" style="overflow-y:auto">
+          <div class="card-hd"><div class="card-title">💬 مکالمات</div></div>
+          <div id="chat-contacts"></div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column">
+          <div class="card-hd">
+            <div class="card-title" id="chat-title">انتخاب مکالمه</div>
+          </div>
+          <div id="chat-messages" style="flex:1;overflow-y:auto;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:12px;min-height:200px"></div>
+          <div style="display:flex;gap:8px">
+            <input class="fc" id="chat-input" placeholder="پیام خود را بنویسید..." style="flex:1" onkeydown="if(event.key==='Enter')sendMsg()">
+            <button class="btn btn-p" onclick="sendMsg()">📤 ارسال</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="page" id="page-settings">
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">👤 اطلاعات کاربری</div></div>
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="width:72px;height:72px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--primary);margin:0 auto 12px">ع</div>
+          </div>
+          <div class="fg"><label class="fl">نام و نام خانوادگی</label><input class="fc" value="علی رضایی"></div>
+          <div class="fg"><label class="fl">شماره پروانه وکالت</label><input class="fc" value="۱۲۳۴۵"></div>
+          <div class="fg"><label class="fl">تلفن</label><input class="fc" value="09123456789"></div>
+          <div class="fg"><label class="fl">ایمیل</label><input class="fc" value="ali@law.ir"></div>
+          <button class="btn btn-p" onclick="showToast('اطلاعات ذخیره شد ✓')">💾 ذخیره</button>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-hd"><div class="card-title">🔐 امنیت</div></div>
+            <div class="fg"><label class="fl">رمز عبور فعلی</label><input class="fc" type="password"></div>
+            <div class="fg"><label class="fl">رمز عبور جدید</label><input class="fc" type="password"></div>
+            <div class="fg"><label class="fl">تکرار رمز عبور</label><input class="fc" type="password"></div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+              <input type="checkbox" id="twofa" style="width:16px;height:16px">
+              <label for="twofa" style="font-size:13px">ورود دومرحله‌ای</label>
+            </div>
+            <button class="btn btn-p" onclick="showToast('رمز عبور تغییر کرد ✓')">🔒 تغییر رمز</button>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">💾 پشتیبان‌گیری</div></div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:14px">آخرین پشتیبان: ۱۴۰۳/۰۴/۱۰</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-p btn-sm" onclick="exportData()">📤 خروجی داده‌ها</button>
+              <button class="btn btn-o btn-sm" onclick="showToast('پشتیبان‌گیری ابری انجام شد ✓')">☁️ پشتیبان ابری</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- BOTTOM NAV - فقط موبایل -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="bn-items">
+    <button class="bn-item active" id="bn-dashboard" onclick="showPage('dashboard',null);setBnActive('bn-dashboard')">
+      <span class="bn-icon">🏠</span>داشبورد
+    </button>
+    <button class="bn-item" id="bn-cases" onclick="showPage('cases',null);setBnActive('bn-cases')">
+      <span class="bn-icon">📁</span>پرونده‌ها
+    </button>
+    <button class="bn-menu-btn" onclick="toggleSidebar()" title="منو">
+      ☰
+    </button>
+    <button class="bn-item" id="bn-calendar" onclick="showPage('calendar',null);setBnActive('bn-calendar')">
+      <span class="bn-icon">📅</span>تقویم
+    </button>
+    <button class="bn-item" id="bn-tasks" onclick="showPage('tasks',null);setBnActive('bn-tasks')">
+      <span class="bn-icon">✅</span>وظایف
+    </button>
+  </div>
+</nav>
+
+<!-- ===== MODALS ===== -->
+
+<!-- ADD CASE -->
+<div class="overlay" id="modal-add-case">
+  <div class="modal">
+    <div class="mh"><div class="mt">📁 ثبت پرونده جدید</div><button class="mc" onclick="closeModal('modal-add-case')">✕</button></div>
+    <div class="mb">
+      <div class="fr">
+        <div class="fg"><label class="fl">شماره پرونده</label><input class="fc" id="c-num" placeholder="مثال: ۱۴۰۳/۱۲۳"></div>
+        <div class="fg"><label class="fl">موضوع پرونده</label><input class="fc" id="c-subject" placeholder="موضوع اصلی پرونده"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">نام موکل</label><input class="fc" id="c-client" placeholder="نام موکل"></div>
+        <div class="fg"><label class="fl">طرف مقابل</label><input class="fc" id="c-opponent" placeholder="نام طرف مقابل"></div>
+      </div>
+      <div class="fr">
+        <div class="fg">
+          <label class="fl">وضعیت پرونده</label>
+          <select class="fc" id="c-status">
+            <option value="active">در حال رسیدگی</option>
+            <option value="pending">در انتظار</option>
+            <option value="appeal">تجدیدنظر</option>
+            <option value="closed">مختومه</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">جلسه بعدی</label><input class="fc" type="date" id="c-next"></div>
+      </div>
+      <div class="fg"><label class="fl">توضیحات</label><textarea class="fc" id="c-desc" rows="3" placeholder="شرح پرونده..."></textarea></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="closeModal('modal-add-case')">انصراف</button>
+      <button class="btn btn-p" onclick="addCase()">💾 ثبت پرونده</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CLIENT -->
+<div class="overlay" id="modal-add-client">
+  <div class="modal">
+    <div class="mh"><div class="mt">👤 افزودن موکل جدید</div><button class="mc" onclick="closeModal('modal-add-client')">✕</button></div>
+    <div class="mb">
+      <div class="fr">
+        <div class="fg"><label class="fl">نام</label><input class="fc" id="cl-fname" placeholder="نام"></div>
+        <div class="fg"><label class="fl">نام خانوادگی</label><input class="fc" id="cl-lname" placeholder="نام خانوادگی"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">شماره ملی</label><input class="fc" id="cl-national" placeholder="کد ملی"></div>
+        <div class="fg"><label class="fl">تلفن</label><input class="fc" id="cl-phone" placeholder="09..."></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">ایمیل</label><input class="fc" id="cl-email" placeholder="email@example.com"></div>
+        <div class="fg"><label class="fl">نوع موکل</label>
+          <select class="fc" id="cl-type">
+            <option value="real">شخص حقیقی</option>
+            <option value="legal">شخص حقوقی</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">آدرس</label><textarea class="fc" id="cl-address" rows="2" placeholder="آدرس کامل..."></textarea></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="closeModal('modal-add-client')">انصراف</button>
+      <button class="btn btn-p" onclick="addClient()">💾 ثبت موکل</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EVENT -->
+<div class="overlay" id="modal-add-event">
+  <div class="modal">
+    <div class="mh"><div class="mt">📅 افزودن رویداد</div><button class="mc" onclick="closeModal('modal-add-event')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">عنوان رویداد</label><input class="fc" id="ev-title" placeholder="مثال: جلسه دادگاه پرونده شماره..."></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">تاریخ</label><input class="fc" type="date" id="ev-date"></div>
+        <div class="fg"><label class="fl">ساعت</label><input class="fc" type="time" id="ev-time"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">نوع رویداد</label>
+          <select class="fc" id="ev-type">
+            <option value="court">جلسه دادگاه</option>
+            <option value="consult">مشاوره</option>
+            <option value="deadline">مهلت قانونی</option>
+            <option value="other">سایر</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">پرونده مرتبط</label><input class="fc" id="ev-case" placeholder="شماره پرونده"></div>
+      </div>
+      <div class="fg"><label class="fl">یادداشت</label><textarea class="fc" id="ev-note" rows="2" placeholder="توضیحات..."></textarea></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="closeModal('modal-add-event')">انصراف</button>
+      <button class="btn btn-p" onclick="addEvent()">💾 ثبت رویداد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TASK -->
+<div class="overlay" id="modal-add-task">
+  <div class="modal">
+    <div class="mh"><div class="mt">✅ افزودن وظیفه</div><button class="mc" onclick="closeModal('modal-add-task')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">عنوان وظیفه</label><input class="fc" id="tk-title" placeholder="شرح وظیفه..."></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">اولویت</label>
+          <select class="fc" id="tk-priority">
+            <option value="high">فوری 🔴</option>
+            <option value="med">متوسط 🟡</option>
+            <option value="low">عادی 🟢</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">مهلت انجام</label><input class="fc" type="date" id="tk-due"></div>
+      </div>
+      <div class="fg"><label class="fl">پرونده مرتبط</label><input class="fc" id="tk-case" placeholder="اختیاری - شماره پرونده"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="closeModal('modal-add-task')">انصراف</button>
+      <button class="btn btn-p" onclick="addTask()">💾 ثبت وظیفه</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD DOCUMENT -->
+<div class="overlay" id="modal-add-doc">
+  <div class="modal">
+    <div class="mh"><div class="mt">📄 بارگذاری سند</div><button class="mc" onclick="closeModal('modal-add-doc')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">نام سند</label><input class="fc" id="doc-name" placeholder="عنوان سند"></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">دسته‌بندی</label>
+          <select class="fc" id="doc-cat">
+            <option value="legal">اسناد حقوقی</option>
+            <option value="identity">مدارک هویتی</option>
+            <option value="financial">مالی</option>
+            <option value="court">دادگاهی</option>
+            <option value="contract">قراردادها</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">پرونده مرتبط</label><input class="fc" id="doc-case" placeholder="شماره پرونده"></div>
+      </div>
+      <div class="upload-area" onclick="showToast('قابلیت آپلود واقعی نیاز به سرور دارد')">
+        <div class="upload-icon">📁</div>
+        <p style="font-size:13px;margin-bottom:6px">برای آپلود کلیک کنید یا فایل را اینجا بکشید</p>
+        <p style="font-size:11px">PDF، Word، JPG، PNG پشتیبانی می‌شود</p>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="closeModal('modal-add-doc')">انصراف</button>
+      <button class="btn btn-p" onclick="addDoc()">💾 ثبت سند</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FINANCE -->
+<div class="overlay" id="modal-add-finance">
+  <div class="modal">
+    <div class="mh"><div class="mt">💰 ثبت تراکنش مالی</div><button class="mc" onclick="closeModal('modal-add-finance')">✕</button></div>
+    <div class="mb">
+      <div class="fr">
+        <div class="fg"><label class="fl">شرح</label><input class="fc" id="fin-desc" placeholder="شرح تراکنش"></div>
+        <div class="fg"><label class="fl">موکل</label><input class="fc" id="fin-client" placeholder="نام موکل"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">مبلغ (تومان)</label><input class="fc" id="fin-amount" type="number" placeholder="0"></div>
+        <div class="fg"><label class="fl">نوع</label>
+          <select class="fc" id="fin-type">
+            <option value="income">دریافتی</option>
+            <option value="expense">هزینه</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">تاریخ</label><input class="fc" type="date" id="fin-date"></div>
+        <div class="fg"><label class="fl">وضعیت</label>
+          <select class="fc" id="fin-status">
+            <option value="paid">پرداخت شده</option>
+            <option value="pending">در انتظار</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="closeModal('modal-add-finance')">انصراف</button>
+      <button class="btn btn-p" onclick="addFinance()">💾 ثبت تراکنش</button>
+    </div>
+  </div>
+</div>
+
+<!-- CASE DETAIL -->
+<div class="overlay" id="modal-case-detail">
+  <div class="modal" style="max-width:700px">
+    <div class="mh"><div class="mt" id="cd-title">جزئیات پرونده</div><button class="mc" onclick="closeModal('modal-case-detail')">✕</button></div>
+    <div class="mb">
+      <div id="case-detail-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT DETAIL -->
+<div class="overlay" id="modal-client-detail">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="cld-title">اطلاعات موکل</div><button class="mc" onclick="closeModal('modal-client-detail')">✕</button></div>
+    <div class="mb" id="client-detail-content"></div>
+  </div>
+</div>
+
+<!-- TEMPLATE MODAL -->
+<div class="overlay" id="modal-template">
+  <div class="modal" style="max-width:700px">
+    <div class="mh"><div class="mt" id="tpl-title">قالب حقوقی</div><button class="mc" onclick="closeModal('modal-template')">✕</button></div>
+    <div class="mb">
+      <div class="fr" style="margin-bottom:14px">
+        <div class="fg"><label class="fl">نام موکل</label><input class="fc" id="tpl-client" placeholder="نام موکل" oninput="fillTemplate()"></div>
+        <div class="fg"><label class="fl">شماره پرونده</label><input class="fc" id="tpl-casenum" placeholder="شماره پرونده" oninput="fillTemplate()"></div>
+      </div>
+      <div class="fg"><label class="fl">موضوع</label><input class="fc" id="tpl-subject" placeholder="موضوع" oninput="fillTemplate()"></div>
+      <div class="fg" style="margin-top:14px"><label class="fl">متن سند</label>
+        <textarea class="fc" id="tpl-text" rows="12" style="font-size:13px;line-height:1.8"></textarea>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="closeModal('modal-template')">بستن</button>
+      <button class="btn btn-p" onclick="printTemplate()">🖨️ چاپ</button>
+      <button class="btn btn-s" onclick="showToast('سند ذخیره شد ✓')">💾 ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAW DETAIL -->
+<div class="overlay" id="modal-law">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="law-title">متن قانون</div><button class="mc" onclick="closeModal('modal-law')">✕</button></div>
+    <div class="mb" id="law-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--primary);color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s;box-shadow:0 4px 20px rgba(0,0,0,.2)"></div>
+
+<script>
+// ===== DATA =====
+let db = {
+  cases: [
+    {id:1,num:'۱۴۰۳/۱۰۱',subject:'دعوای ملکی',client:'احمد کریمی',opponent:'محمد صادقی',status:'active',date:'1403/01/15',next:'1403/05/20',desc:'اختلاف در سند ملک'},
+    {id:2,num:'۱۴۰۳/۱۰۲',subject:'طلاق توافقی',client:'فاطمه نوری',opponent:'-',status:'pending',date:'1403/02/10',next:'1403/05/25',desc:'طلاق توافقی با دو فرزند'},
+    {id:3,num:'۱۴۰۳/۱۰۳',subject:'شکایت کیفری',client:'شرکت آریا',opponent:'علی محمدی',status:'active',date:'1403/03/05',next:'1403/06/01',desc:'کلاهبرداری تجاری'},
+    {id:4,num:'۱۴۰۲/۰۸۵',subject:'اجاره‌نامه',client:'رضا احمدی',opponent:'بنگاه مسکن',status:'closed',date:'1402/08/20',next:'-',desc:'اختلاف اجاره'},
+    {id:5,num:'۱۴۰۳/۱۰۵',subject:'تجدیدنظر',client:'مریم شیرازی',opponent:'سازمان تأمین',status:'appeal',date:'1403/04/01',next:'1403/06/10',desc:'اعتراض به رأی بیمه'},
+  ],
+  clients: [
+    {id:1,fname:'احمد',lname:'کریمی',national:'0012345678',phone:'09121234567',email:'a.karimi@mail.com',type:'real',address:'تهران، خیابان ولیعصر'},
+    {id:2,fname:'فاطمه',lname:'نوری',national:'0023456789',phone:'09351234567',email:'f.noori@mail.com',type:'real',address:'اصفهان، خیابان چهارباغ'},
+    {id:3,fname:'شرکت آریا',lname:'',national:'10123456789',phone:'02112345678',email:'info@arya.co.ir',type:'legal',address:'تهران، خیابان کریمخان'},
+    {id:4,fname:'رضا',lname:'احمدی',national:'0034567890',phone:'09161234567',email:'r.ahmadi@mail.com',type:'real',address:'شیراز، بلوار زند'},
+    {id:5,fname:'مریم',lname:'شیرازی',national:'0045678901',phone:'09111234567',email:'m.shirazi@mail.com',type:'real',address:'تهران، سعادت‌آباد'},
+  ],
+  events: [
+    {id:1,title:'جلسه دادگاه - پرونده ۱۰۱',date:'2025-07-01',time:'10:00',type:'court',caseNum:'۱۴۰۳/۱۰۱',note:'شعبه ۱۵ دادگاه عمومی'},
+    {id:2,title:'مشاوره با موکل جدید',date:'2025-07-01',time:'14:00',type:'consult',caseNum:'',note:''},
+    {id:3,title:'مهلت تجدیدنظر - پرونده ۱۰۵',date:'2025-07-05',time:'',type:'deadline',caseNum:'۱۴۰۳/۱۰۵',note:'آخرین مهلت اعتراض'},
+    {id:4,title:'جلسه دادگاه - پرونده ۱۰۲',date:'2025-07-08',time:'09:00',type:'court',caseNum:'۱۴۰۳/۱۰۲',note:''},
+    {id:5,title:'پرداخت حق‌الوکاله',date:'2025-07-10',time:'',type:'other',caseNum:'',note:'دریافت از احمد کریمی'},
+  ],
+  tasks: [
+    {id:1,title:'تهیه لایحه دفاعیه پرونده ۱۰۳',priority:'high',due:'2025-07-02',done:false,caseNum:'۱۴۰۳/۱۰۳'},
+    {id:2,title:'تماس با موکل شیرازی',priority:'med',due:'2025-07-01',done:false,caseNum:''},
+    {id:3,title:'ثبت اسناد پرونده ۱۰۱',priority:'low',due:'2025-07-03',done:true,caseNum:'۱۴۰۳/۱۰۱'},
+    {id:4,title:'پیگیری وقت دادگاه',priority:'high',due:'2025-07-01',done:false,caseNum:''},
+    {id:5,title:'ارسال پیام به موکل نوری',priority:'med',due:'2025-07-04',done:false,caseNum:''},
+  ],
+  documents: [
+    {id:1,name:'سند رسمی ملک',cat:'legal',caseNum:'۱۴۰۳/۱۰۱',date:'1403/01/20',type:'PDF'},
+    {id:2,name:'شناسنامه موکل کریمی',cat:'identity',caseNum:'۱۴۰۳/۱۰۱',date:'1403/01/18',type:'JPG'},
+    {id:3,name:'قرارداد اجاره',cat:'contract',caseNum:'۱۴۰۲/۰۸۵',date:'1402/08/22',type:'Word'},
+    {id:4,name:'رأی دادگاه بدوی',cat:'court',caseNum:'۱۴۰۳/۱۰۵',date:'1403/03/15',type:'PDF'},
+    {id:5,name:'فاکتور خدمات',cat:'financial',caseNum:'',date:'1403/04/01',type:'PDF'},
+  ],
+  finances: [
+    {id:1,desc:'حق‌الوکاله پرونده ۱۰۱',client:'احمد کریمی',type:'income',amount:15000000,date:'1403/04/01',status:'paid'},
+    {id:2,desc:'هزینه کارشناس',client:'فاطمه نوری',type:'expense',amount:3000000,date:'1403/04/05',status:'paid'},
+    {id:3,desc:'حق‌الوکاله پرونده ۱۰۳',client:'شرکت آریا',type:'income',amount:25000000,date:'1403/04/10',status:'pending'},
+    {id:4,desc:'هزینه دفتر',client:'-',type:'expense',amount:2000000,date:'1403/04/15',status:'paid'},
+    {id:5,desc:'حق‌الوکاله پرونده ۱۰۵',client:'مریم شیرازی',type:'income',amount:10000000,date:'1403/04/20',status:'paid'},
+  ],
+  messages: [
+    {contact:'احمد کریمی',msgs:[
+      {from:'client',text:'وکیل محترم، وضعیت پرونده چطور است؟',time:'10:30'},
+      {from:'lawyer',text:'جلسه بعدی ۲۰ خرداد است. مدارک را آماده کنید.',time:'10:45'},
+    ]},
+    {contact:'فاطمه نوری',msgs:[
+      {from:'client',text:'سلام، آیا وقت دادگاه تعیین شد؟',time:'09:00'},
+    ]},
+  ],
+  notifications: [
+    {text:'جلسه دادگاه پرونده ۱۰۱ فردا ساعت ۱۰ صبح',color:'var(--danger)',time:'۱ ساعت پیش'},
+    {text:'مهلت تجدیدنظر پرونده ۱۰۵ در ۵ روز دیگر',color:'var(--warn)',time:'۲ ساعت پیش'},
+    {text:'پیام جدید از احمد کریمی',color:'var(--info)',time:'۳ ساعت پیش'},
+    {text:'پرداخت حق‌الوکاله شرکت آریا در انتظار',color:'var(--success)',time:'دیروز'},
+  ]
+};
+
+// ===== API BASE =====
+const API = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000/api'
+  : window.location.origin + '/api';
+let TOKEN = localStorage.getItem('legal_token') || '';
+let CURRENT_USER = JSON.parse(localStorage.getItem('legal_user') || 'null');
+
+function apiHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
+}
+async function apiGet(url) {
+  const r = await fetch(API + url, { headers: apiHeaders() });
+  if (r.status === 401) { doLogout(); return []; }
+  return r.json();
+}
+async function apiPost(url, data) {
+  const r = await fetch(API + url, { method:'POST', headers: apiHeaders(), body: JSON.stringify(data) });
+  return r.json();
+}
+async function apiPut(url, data) {
+  const r = await fetch(API + url, { method:'PUT', headers: apiHeaders(), body: JSON.stringify(data) });
+  return r.json();
+}
+async function apiDelete(url) {
+  const r = await fetch(API + url, { method:'DELETE', headers: apiHeaders() });
+  return r.json();
+}
+
+// ===== LOGIN / REGISTER =====
+function switchLoginTab(tab, btn) {
+  document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('login-error').classList.remove('show');
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  if (!email || !pass) { errEl.textContent = 'ایمیل و رمز عبور الزامی است'; errEl.classList.add('show'); return; }
+  try {
+    const r = await fetch(API + '/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password: pass}) });
+    const data = await r.json();
+    if (!r.ok) { errEl.textContent = data.error || 'خطا در ورود'; errEl.classList.add('show'); return; }
+    TOKEN = data.token;
+    CURRENT_USER = data.user;
+    localStorage.setItem('legal_token', TOKEN);
+    localStorage.setItem('legal_user', JSON.stringify(CURRENT_USER));
+    document.getElementById('login-page').style.display = 'none';
+    document.querySelector('.s-uname').textContent = CURRENT_USER.name;
+    document.querySelector('.s-avatar').textContent = CURRENT_USER.name.charAt(0);
+    await loadAllData();
+    showPage('dashboard', null);
+  } catch { errEl.textContent = 'خطا در اتصال به سرور'; errEl.classList.add('show'); }
+}
+
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const role = document.getElementById('reg-role').value;
+  const errEl = document.getElementById('login-error');
+  if (!name || !email || !pass) { errEl.textContent = 'همه فیلدها الزامی است'; errEl.classList.add('show'); return; }
+  try {
+    const r = await fetch(API + '/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, email, password: pass, role}) });
+    const data = await r.json();
+    if (!r.ok) { errEl.textContent = data.error || 'خطا'; errEl.classList.add('show'); return; }
+    TOKEN = data.token;
+    CURRENT_USER = data.user;
+    localStorage.setItem('legal_token', TOKEN);
+    localStorage.setItem('legal_user', JSON.stringify(CURRENT_USER));
+    document.getElementById('login-page').style.display = 'none';
+    document.querySelector('.s-uname').textContent = CURRENT_USER.name;
+    document.querySelector('.s-avatar').textContent = CURRENT_USER.name.charAt(0);
+    await loadAllData();
+    showPage('dashboard', null);
+  } catch { errEl.textContent = 'خطا در اتصال به سرور'; errEl.classList.add('show'); }
+}
+
+function doLogout() {
+  TOKEN = ''; CURRENT_USER = null;
+  localStorage.removeItem('legal_token');
+  localStorage.removeItem('legal_user');
+  document.getElementById('login-page').style.display = 'flex';
+}
+
+// ===== LOAD ALL DATA FROM SERVER =====
+async function loadAllData() {
+  const [cases, clients, events, tasks, documents, finances, messages] = await Promise.all([
+    apiGet('/cases'), apiGet('/clients'), apiGet('/events'),
+    apiGet('/tasks'), apiGet('/documents'), apiGet('/finances'), apiGet('/messages')
+  ]);
+  db.cases = cases;
+  db.clients = clients;
+  db.events = events;
+  db.tasks = tasks.map(t => ({ ...t, done: t.done == 1 }));
+  db.documents = documents;
+  db.finances = finances;
+  // rebuild messages
+  const contactMap = {};
+  messages.forEach(m => {
+    const contact = m.from_user === (CURRENT_USER?.name || '') ? m.to_user : m.from_user;
+    if (!contactMap[contact]) contactMap[contact] = { contact, msgs: [] };
+    contactMap[contact].msgs.push({ from: m.from_user === (CURRENT_USER?.name || '') ? 'lawyer' : 'client', text: m.text, time: m.time });
+  });
+  db.messages = Object.values(contactMap);
+  if (!db.messages.length) {
+    db.messages = [{ contact:'احمد کریمی', msgs:[] }, { contact:'فاطمه نوری', msgs:[] }];
+  }
+}
+
+// ===== SIDEBAR MOBILE =====
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// ===== BOTTOM NAV =====
+function setBnActive(id) {
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+// ===== PWA SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// ===== NAVIGATION =====
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  closeSidebar();
+  const titles = {
+    dashboard:'داشبورد', cases:'پرونده‌ها', clients:'موکلین',
+    calendar:'تقویم و یادآوری', tasks:'مدیریت وظایف',
+    documents:'اسناد و مدارک', finance:'امور مالی',
+    templates:'قالب‌های حقوقی', laws:'قوانین و آرا',
+    reports:'گزارش‌ها', messages:'پیام‌ها', settings:'تنظیمات'
+  };
+  document.getElementById('page-title').textContent = titles[id] || id;
+  closeNotif();
+  if (id==='dashboard') renderDashboard();
+  if (id==='cases') renderCases();
+  if (id==='clients') renderClients();
+  if (id==='calendar') renderCalendar();
+  if (id==='tasks') renderTasks();
+  if (id==='documents') renderDocs();
+  if (id==='finance') renderFinance();
+  if (id==='templates') renderTemplates();
+  if (id==='laws') renderLaws();
+  if (id==='reports') renderReports();
+  if (id==='messages') renderMessages();
+}
+
+// ===== MODAL =====
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(80px)'; }, 3000);
+}
+
+// ===== NOTIFICATIONS =====
+function toggleNotif() {
+  document.getElementById('notif-panel').classList.toggle('open');
+}
+function closeNotif() {
+  document.getElementById('notif-panel').classList.remove('open');
+}
+function renderNotifications() {
+  const list = document.getElementById('notif-list');
+  list.innerHTML = db.notifications.map(n => `
+    <div class="ni-item">
+      <div class="ni-dot" style="background:${n.color}"></div>
+      <div>
+        <div class="ni-text">${n.text}</div>
+        <div class="ni-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('notif-count').textContent = db.notifications.length;
+}
+
+// ===== DATE =====
+function setDate() {
+  const d = new Date();
+  const opts = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
+  document.getElementById('today-date').textContent = d.toLocaleDateString('fa-IR', opts);
+}
+
+// ===== ROLE SWITCHER =====
+function switchRole(role, btn) {
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels = {lawyer:'وکیل دادگستری', client:'موکل', admin:'مدیر سیستم', secretary:'منشی'};
+  document.getElementById('current-role-label').textContent = labels[role];
+  showToast('نقش به «' + labels[role] + '» تغییر کرد');
+}
+
+// ===== STATUS HELPERS =====
+function statusBadge(s) {
+  const m = {active:'b-active',pending:'b-pending',closed:'b-closed',appeal:'b-purple'};
+  const l = {active:'در حال رسیدگی',pending:'در انتظار',closed:'مختومه',appeal:'تجدیدنظر'};
+  return `<span class="badge ${m[s]||'b-blue'}">${l[s]||s}</span>`;
+}
+function typeIcon(t) {
+  const m = {court:'⚖️',consult:'💬',deadline:'⏰',other:'📌'};
+  return m[t] || '📌';
+}
+function catIcon(c) {
+  const m = {legal:'📜',identity:'🪪',financial:'💳',court:'⚖️',contract:'📋'};
+  return m[c] || '📄';
+}
+function priorityDot(p) {
+  const m = {high:'ph',med:'pm',low:'pl'};
+  return `<div class="t-dot ${m[p]||'pl'}"></div>`;
+}
+function fmtMoney(n) {
+  return Number(n).toLocaleString('fa-IR') + ' تومان';
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const active = db.cases.filter(c=>c.status==='active').length;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayEv = db.events.filter(e=>e.date===todayStr);
+  const pending = db.tasks.filter(t=>!t.done).length;
+  const income = db.finances.filter(f=>f.type==='income'&&f.status==='paid').reduce((a,b)=>a+b.amount,0);
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-icon ic-b">📁</div><div><div class="stat-num">${active}</div><div class="stat-lbl">پرونده فعال</div></div></div>
+    <div class="stat-card g"><div class="stat-icon ic-g">📅</div><div><div class="stat-num">${todayEv.length}</div><div class="stat-lbl">جلسات امروز</div></div></div>
+    <div class="stat-card gold"><div class="stat-icon ic-gold">✅</div><div><div class="stat-num">${pending}</div><div class="stat-lbl">وظایف در انتظار</div></div></div>
+    <div class="stat-card r"><div class="stat-icon ic-gold">💰</div><div><div class="stat-num">${(income/1000000).toFixed(0)}M</div><div class="stat-lbl">درآمد (تومان)</div></div></div>
+  `;
+
+  document.getElementById('today-sessions').innerHTML = todayEv.length ? todayEv.map(e=>`
+    <div class="task-item">
+      <div style="font-size:18px">${typeIcon(e.type)}</div>
+      <div class="t-text">
+        <div style="font-weight:600">${e.title}</div>
+        <div style="font-size:11px;color:var(--muted)">${e.time||'تمام روز'} ${e.note?'· '+e.note:''}</div>
+      </div>
+    </div>
+  `).join('') : '<div class="empty"><div class="empty-icon">📅</div><p>جلسه‌ای امروز ندارید</p></div>';
+
+  const pendingTasks = db.tasks.filter(t=>!t.done).slice(0,4);
+  document.getElementById('today-tasks').innerHTML = pendingTasks.length ? pendingTasks.map(t=>`
+    <div class="task-item ${t.done?'done':''}">
+      <div class="t-check" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
+      ${priorityDot(t.priority)}
+      <div class="t-text">${t.title}</div>
+    </div>
+  `).join('') : '<div class="empty"><p>همه وظایف انجام شده ✓</p></div>';
+
+  document.getElementById('recent-cases').innerHTML = `
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>شماره</th><th>موضوع</th><th>موکل</th><th>وضعیت</th></tr></thead>
+      <tbody>${db.cases.slice(0,4).map(c=>`
+        <tr onclick="showCaseDetail(${c.id})" style="cursor:pointer">
+          <td><strong>${c.num}</strong></td>
+          <td>${c.subject}</td>
+          <td>${c.client}</td>
+          <td>${statusBadge(c.status)}</td>
+        </tr>
+      `).join('')}</tbody>
+    </table></div>
+  `;
+
+  const months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور'];
+  const vals = [18,24,15,32,28,35];
+  const max = Math.max(...vals);
+  document.getElementById('income-chart').innerHTML = vals.map((v,i)=>`
+    <div class="c-col">
+      <div class="c-val">${v}M</div>
+      <div class="c-bar" style="height:${(v/max)*90}px"></div>
+      <div class="c-lbl">${months[i]}</div>
+    </div>
+  `).join('');
+}
+
+// ===== CASES =====
+function renderCases(list) {
+  const data = list || db.cases;
+  document.getElementById('cases-tbody').innerHTML = data.length ? data.map(c=>`
+    <tr>
+      <td><strong>${c.num}</strong></td>
+      <td>${c.subject}</td>
+      <td>${c.client}</td>
+      <td style="color:var(--muted)">${c.opponent}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td style="color:var(--muted);font-size:12px">${c.date}</td>
+      <td style="color:var(--muted);font-size:12px">${c.next}</td>
+      <td>
+        <button class="btn btn-sm btn-p" onclick="showCaseDetail(${c.id})">مشاهده</button>
+        <button class="btn btn-sm btn-d" onclick="deleteCase(${c.id})" style="margin-right:4px">حذف</button>
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><p>پرونده‌ای یافت نشد</p></div></td></tr>';
+}
+
+function filterCases(q) {
+  const f = db.cases.filter(c =>
+    c.num.includes(q) || c.subject.includes(q) ||
+    c.client.includes(q) || c.opponent.includes(q)
+  );
+  renderCases(f);
+}
+
+function filterCaseStatus(s) {
+  renderCases(s ? db.cases.filter(c=>c.status===s) : db.cases);
+}
+
+async function addCase() {
+  const num = document.getElementById('c-num').value.trim();
+  const subject = document.getElementById('c-subject').value.trim();
+  const client = document.getElementById('c-client').value.trim();
+  if (!num || !subject || !client) { showToast('لطفاً فیلدهای ضروری را پر کنید'); return; }
+  const newCase = await apiPost('/cases', {
+    num, subject, client,
+    opponent: document.getElementById('c-opponent').value || '-',
+    status: document.getElementById('c-status').value,
+    date: new Date().toLocaleDateString('fa-IR'),
+    next_session: document.getElementById('c-next').value || '-',
+    description: document.getElementById('c-desc').value
+  });
+  db.cases.unshift(newCase);
+  closeModal('modal-add-case');
+  renderCases();
+  document.getElementById('nb-cases').textContent = db.cases.filter(c=>c.status==='active').length;
+  showToast('پرونده با موفقیت ثبت شد ✓');
+  ['c-num','c-subject','c-client','c-opponent','c-next','c-desc'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function deleteCase(id) {
+  if (!confirm('آیا از حذف این پرونده مطمئنید؟')) return;
+  await apiDelete('/cases/' + id);
+  db.cases = db.cases.filter(c=>c.id!==id);
+  renderCases();
+  showToast('پرونده حذف شد');
+}
+
+function showCaseDetail(id) {
+  const c = db.cases.find(x=>x.id===id);
+  if (!c) return;
+  document.getElementById('cd-title').textContent = 'پرونده: ' + c.num;
+  const relDocs = db.documents.filter(d=>d.caseNum===c.num);
+  document.getElementById('case-detail-content').innerHTML = `
+    <div style="background:linear-gradient(135deg,var(--primary),var(--pl));color:#fff;padding:20px;border-radius:10px;margin-bottom:18px">
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">${c.subject}</div>
+      <div style="display:flex;gap:16px;font-size:12px;opacity:.85;flex-wrap:wrap">
+        <span>📁 ${c.num}</span><span>👤 ${c.client}</span><span>📅 ${c.date}</span>
+      </div>
+    </div>
+    <div class="fr" style="margin-bottom:16px">
+      <div><strong>موکل:</strong> ${c.client}</div>
+      <div><strong>طرف مقابل:</strong> ${c.opponent}</div>
+      <div><strong>وضعیت:</strong> ${statusBadge(c.status)}</div>
+      <div><strong>جلسه بعدی:</strong> ${c.next}</div>
+    </div>
+    <div style="margin-bottom:16px"><strong>توضیحات:</strong><p style="margin-top:6px;font-size:13px;color:var(--muted);line-height:1.7">${c.desc||'—'}</p></div>
+    <div><strong>اسناد مرتبط (${relDocs.length}):</strong>
+      <div style="margin-top:8px">${relDocs.length ? relDocs.map(d=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:6px;margin-bottom:6px;font-size:13px">
+          ${catIcon(d.cat)} ${d.name} <span class="badge b-blue" style="margin-right:auto">${d.type}</span>
+        </div>
+      `).join('') : '<p style="font-size:13px;color:var(--muted)">سندی ثبت نشده</p>'}
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <strong>تاریخچه:</strong>
+      <div class="timeline" style="margin-top:12px">
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-body"><div class="tl-date">${c.date}</div><div class="tl-text">پرونده ثبت شد</div></div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-body"><div class="tl-date">پیگیری</div><div class="tl-text">در حال رسیدگی</div></div></div>
+      </div>
+    </div>
+  `;
+  openModal('modal-case-detail');
+}
+</script>
+
+<script>
+// ===== CLIENTS =====
+function renderClients(list) {
+  const data = list || db.clients;
+  document.getElementById('clients-grid').innerHTML = data.length ? data.map(c=>`
+    <div class="card" style="cursor:pointer" onclick="showClientDetail(${c.id})">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:46px;height:46px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--primary);flex-shrink:0">
+          ${c.fname.charAt(0)}
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:14px">${c.fname} ${c.lname}</div>
+          <span class="badge ${c.type==='legal'?'b-blue':'b-active'}" style="font-size:10px">${c.type==='legal'?'حقوقی':'حقیقی'}</span>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.9">
+        <div>📞 ${c.phone}</div>
+        <div>✉️ ${c.email}</div>
+        <div>📋 ${db.cases.filter(x=>x.client===c.fname+' '+c.lname||x.client===c.fname).length} پرونده</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button class="btn btn-sm btn-p" onclick="event.stopPropagation();showClientDetail(${c.id})">مشاهده</button>
+        <button class="btn btn-sm btn-o" onclick="event.stopPropagation();showToast('ارتباط با '+${JSON.stringify(c.fname)})">💬 تماس</button>
+      </div>
+    </div>
+  `).join('') : '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">👥</div><h3>موکلی ثبت نشده</h3></div>';
+}
+
+function filterClients(q) {
+  const f = db.clients.filter(c =>
+    (c.fname+' '+c.lname).includes(q) || c.phone.includes(q) || c.national.includes(q)
+  );
+  renderClients(f);
+}
+
+async function addClient() {
+  const fname = document.getElementById('cl-fname').value.trim();
+  const phone = document.getElementById('cl-phone').value.trim();
+  if (!fname || !phone) { showToast('نام و تلفن الزامی است'); return; }
+  const newClient = await apiPost('/clients', {
+    fname, lname: document.getElementById('cl-lname').value,
+    national_id: document.getElementById('cl-national').value,
+    phone, email: document.getElementById('cl-email').value,
+    type: document.getElementById('cl-type').value,
+    address: document.getElementById('cl-address').value
+  });
+  db.clients.unshift(newClient);
+  closeModal('modal-add-client');
+  renderClients();
+  showToast('موکل با موفقیت ثبت شد ✓');
+}
+
+function showClientDetail(id) {
+  const c = db.clients.find(x=>x.id===id);
+  if (!c) return;
+  document.getElementById('cld-title').textContent = c.fname + ' ' + c.lname;
+  const relCases = db.cases.filter(x=>x.client.includes(c.fname));
+  const relFin = db.finances.filter(f=>f.client.includes(c.fname));
+  document.getElementById('client-detail-content').innerHTML = `
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--primary);margin:0 auto 10px">${c.fname.charAt(0)}</div>
+      <div style="font-size:16px;font-weight:700">${c.fname} ${c.lname}</div>
+      <span class="badge ${c.type==='legal'?'b-blue':'b-active'}">${c.type==='legal'?'شخص حقوقی':'شخص حقیقی'}</span>
+    </div>
+    <div class="fr" style="margin-bottom:16px">
+      <div><strong>کد ملی:</strong> ${c.national||'—'}</div>
+      <div><strong>تلفن:</strong> ${c.phone}</div>
+      <div><strong>ایمیل:</strong> ${c.email||'—'}</div>
+      <div><strong>آدرس:</strong> ${c.address||'—'}</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <strong>پرونده‌ها (${relCases.length}):</strong>
+      ${relCases.map(x=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border-radius:6px;margin-top:6px;font-size:13px">
+          <span>${x.num} - ${x.subject}</span>${statusBadge(x.status)}
+        </div>
+      `).join('') || '<p style="font-size:13px;color:var(--muted);margin-top:6px">پرونده‌ای ثبت نشده</p>'}
+    </div>
+    <div>
+      <strong>تراکنش‌های مالی:</strong>
+      ${relFin.map(f=>`
+        <div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--bg);border-radius:6px;margin-top:6px;font-size:13px">
+          <span>${f.desc}</span>
+          <span style="color:${f.type==='income'?'var(--success)':'var(--danger)'}">${f.type==='income'?'+':'−'}${fmtMoney(f.amount)}</span>
+        </div>
+      `).join('') || '<p style="font-size:13px;color:var(--muted);margin-top:6px">تراکنشی ثبت نشده</p>'}
+    </div>
+  `;
+  openModal('modal-client-detail');
+}
+
+// ===== CALENDAR =====
+let calDate = new Date();
+const dayNames = ['ی','د','س','چ','پ','ج','ش'];
+
+function renderCalendar() {
+  const yr = calDate.getFullYear();
+  const mo = calDate.getMonth();
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const persianMonths = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+  document.getElementById('cal-month-label').textContent = months[mo] + ' ' + yr;
+  const firstDay = new Date(yr, mo, 1).getDay();
+  const daysInMonth = new Date(yr, mo+1, 0).getDate();
+  const today = new Date();
+  let html = dayNames.map(d=>`<div class="cal-header">${d}</div>`).join('');
+  for (let i=0; i<firstDay; i++) html += `<div class="cal-day other-month"></div>`;
+  for (let d=1; d<=daysInMonth; d++) {
+    const dateStr = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = d===today.getDate() && mo===today.getMonth() && yr===today.getFullYear();
+    const hasEv = db.events.some(e=>e.date===dateStr);
+    html += `<div class="cal-day${isToday?' today':''}${hasEv?' has-event':''}" onclick="showDayEvents('${dateStr}')">${d}</div>`;
+  }
+  document.getElementById('calendar-grid').innerHTML = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">${html}</div>`;
+  renderEventsList();
+}
+
+function renderEventsList() {
+  const sorted = [...db.events].sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('events-list').innerHTML = sorted.map(e=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:8px;background:var(--bg);margin-bottom:8px;border:1px solid var(--border)">
+      <div style="font-size:20px">${typeIcon(e.type)}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${e.title}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${e.date} ${e.time?'· '+e.time:''}</div>
+        ${e.note?`<div style="font-size:11px;color:var(--muted)">${e.note}</div>`:''}
+      </div>
+      <button class="btn btn-sm btn-d" onclick="deleteEvent(${e.id})">✕</button>
+    </div>
+  `).join('') || '<div class="empty"><div class="empty-icon">📅</div><p>رویدادی ثبت نشده</p></div>';
+}
+
+function showDayEvents(dateStr) {
+  const evs = db.events.filter(e=>e.date===dateStr);
+  if (evs.length) showToast(evs.map(e=>e.title).join(' | '));
+  else showToast('رویدادی در این روز نیست');
+}
+
+function prevMonth() { calDate.setMonth(calDate.getMonth()-1); renderCalendar(); }
+function nextMonth() { calDate.setMonth(calDate.getMonth()+1); renderCalendar(); }
+
+async function addEvent() {
+  const title = document.getElementById('ev-title').value.trim();
+  const date = document.getElementById('ev-date').value;
+  if (!title || !date) { showToast('عنوان و تاریخ الزامی است'); return; }
+  const ev = await apiPost('/events', {
+    title, date, time: document.getElementById('ev-time').value,
+    type: document.getElementById('ev-type').value,
+    case_num: document.getElementById('ev-case').value,
+    note: document.getElementById('ev-note').value
+  });
+  db.events.push(ev);
+  closeModal('modal-add-event');
+  renderCalendar();
+  showToast('رویداد ثبت شد ✓');
+}
+
+async function deleteEvent(id) {
+  await apiDelete('/events/' + id);
+  db.events = db.events.filter(e=>e.id!==id);
+  renderCalendar();
+  showToast('رویداد حذف شد');
+}
+
+// ===== TASKS =====
+function renderTasks() {
+  document.getElementById('tasks-list').innerHTML = db.tasks.map(t=>`
+    <div class="task-item ${t.done?'done':''}">
+      <div class="t-check" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
+      ${priorityDot(t.priority)}
+      <div class="t-text">
+        <div>${t.title}</div>
+        ${t.due?`<div style="font-size:11px;color:var(--muted)">مهلت: ${t.due}</div>`:''}
+      </div>
+      <button class="btn btn-sm btn-d" onclick="deleteTask(${t.id})">✕</button>
+    </div>
+  `).join('') || '<div class="empty"><p>وظیفه‌ای ثبت نشده</p></div>';
+
+  const done = db.tasks.filter(t=>t.done).length;
+  const total = db.tasks.length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('task-summary').innerHTML = `
+    <div style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+        <span>پیشرفت کلی</span><span style="font-weight:700">${pct}٪</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:var(--success)"></div></div>
+    </div>
+    <div class="g2" style="gap:10px">
+      <div style="text-align:center;padding:14px;background:var(--bg);border-radius:8px">
+        <div style="font-size:22px;font-weight:800;color:var(--success)">${done}</div>
+        <div style="font-size:11px;color:var(--muted)">انجام شده</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--bg);border-radius:8px">
+        <div style="font-size:22px;font-weight:800;color:var(--danger)">${total-done}</div>
+        <div style="font-size:11px;color:var(--muted)">باقیمانده</div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      ${['high','med','low'].map(p=>{
+        const cnt = db.tasks.filter(t=>t.priority===p).length;
+        const lbl = {high:'فوری',med:'متوسط',low:'عادی'}[p];
+        const clr = {high:'var(--danger)',med:'var(--warn)',low:'var(--success)'}[p];
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border-radius:6px;margin-bottom:6px;font-size:13px">
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:${clr}"></div>${lbl}</div>
+          <strong>${cnt}</strong>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+  document.getElementById('nb-tasks').textContent = db.tasks.filter(t=>!t.done).length;
+}
+
+function toggleTask(id) {
+  const t = db.tasks.find(x=>x.id===id);
+  if (t) { t.done = !t.done; renderTasks(); }
+}
+
+async function addTask() {
+  const title = document.getElementById('tk-title').value.trim();
+  if (!title) { showToast('عنوان وظیفه الزامی است'); return; }
+  const task = await apiPost('/tasks', {
+    title, priority: document.getElementById('tk-priority').value,
+    due_date: document.getElementById('tk-due').value,
+    done: false, case_num: document.getElementById('tk-case').value
+  });
+  db.tasks.unshift({ ...task, done: false });
+  closeModal('modal-add-task');
+  renderTasks();
+  showToast('وظیفه ثبت شد ✓');
+}
+
+async function deleteTask(id) {
+  await apiDelete('/tasks/' + id);
+  db.tasks = db.tasks.filter(t=>t.id!==id);
+  renderTasks();
+  showToast('وظیفه حذف شد');
+}
+</script>
+
+<script>
+// toggleTask - async version
+async function toggleTask(id) {
+  const t = db.tasks.find(x=>x.id===id);
+  if (!t) return;
+  t.done = !t.done;
+  await apiPut('/tasks/' + id, { done: t.done });
+  renderTasks();
+}
+function renderDocs(list) {
+  const data = list || db.documents;
+  document.getElementById('docs-grid').innerHTML = data.length ? data.map(d=>`
+    <div class="card" style="cursor:pointer">
+      <div style="font-size:36px;text-align:center;margin-bottom:12px">${catIcon(d.cat)}</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:6px;text-align:center">${d.name}</div>
+      <div style="text-align:center;margin-bottom:10px">
+        <span class="badge b-blue">${d.type}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.7">
+        <div>${d.date}</div>
+        ${d.caseNum?`<div>پرونده: ${d.caseNum}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button class="btn btn-sm btn-p" style="flex:1" onclick="showToast('دانلود سند نیاز به سرور دارد')">⬇️ دانلود</button>
+        <button class="btn btn-sm btn-d" onclick="deleteDoc(${d.id})">🗑️</button>
+      </div>
+    </div>
+  `).join('') : '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📄</div><h3>سندی ثبت نشده</h3></div>';
+}
+
+function filterDocs(q) {
+  renderDocs(db.documents.filter(d=>d.name.includes(q)||d.caseNum.includes(q)));
+}
+
+function addDoc() {
+  const name = document.getElementById('doc-name').value.trim();
+  if (!name) { showToast('نام سند الزامی است'); return; }
+  db.documents.push({
+    id: Date.now(), name,
+    cat: document.getElementById('doc-cat').value,
+    caseNum: document.getElementById('doc-case').value,
+    date: new Date().toLocaleDateString('fa-IR'),
+    type: 'PDF'
+  });
+  closeModal('modal-add-doc');
+  renderDocs();
+  showToast('سند ثبت شد ✓');
+}
+
+function deleteDoc(id) {
+  db.documents = db.documents.filter(d=>d.id!==id);
+  renderDocs();
+  showToast('سند حذف شد');
+}
+
+// ===== FINANCE =====
+function renderFinance() {
+  const income = db.finances.filter(f=>f.type==='income'&&f.status==='paid').reduce((a,b)=>a+b.amount,0);
+  const pending = db.finances.filter(f=>f.type==='income'&&f.status==='pending').reduce((a,b)=>a+b.amount,0);
+  const expense = db.finances.filter(f=>f.type==='expense').reduce((a,b)=>a+b.amount,0);
+  document.getElementById('finance-stats').innerHTML = `
+    <div class="stat-card g"><div class="stat-icon ic-g">💰</div><div><div class="stat-num" style="font-size:18px">${fmtMoney(income)}</div><div class="stat-lbl">درآمد دریافت شده</div></div></div>
+    <div class="stat-card gold"><div class="stat-icon ic-gold">⏳</div><div><div class="stat-num" style="font-size:18px">${fmtMoney(pending)}</div><div class="stat-lbl">در انتظار دریافت</div></div></div>
+    <div class="stat-card r"><div class="stat-icon ic-r">💸</div><div><div class="stat-num" style="font-size:18px">${fmtMoney(expense)}</div><div class="stat-lbl">هزینه‌ها</div></div></div>
+  `;
+  document.getElementById('finance-tbody').innerHTML = db.finances.map(f=>`
+    <tr>
+      <td style="font-size:12px;color:var(--muted)">${f.date}</td>
+      <td>${f.desc}</td>
+      <td>${f.client}</td>
+      <td><span class="badge ${f.type==='income'?'b-active':'b-urgent'}">${f.type==='income'?'دریافتی':'هزینه'}</span></td>
+      <td style="font-weight:700;color:${f.type==='income'?'var(--success)':'var(--danger)'}">${f.type==='income'?'+':'−'}${fmtMoney(f.amount)}</td>
+      <td><span class="badge ${f.status==='paid'?'b-active':'b-pending'}">${f.status==='paid'?'پرداخت شده':'در انتظار'}</span></td>
+    </tr>
+  `).join('');
+  const months = ['فر','ار','خر','تی','مر','شه'];
+  const vals = [18,24,15,32,28,35];
+  const max = Math.max(...vals);
+  document.getElementById('finance-chart').innerHTML = vals.map((v,i)=>`
+    <div class="c-col">
+      <div class="c-val">${v}M</div>
+      <div class="c-bar" style="height:${(v/max)*90}px;background:var(--success)"></div>
+      <div class="c-lbl">${months[i]}</div>
+    </div>
+  `).join('');
+}
+
+async function addFinance() {
+  const desc = document.getElementById('fin-desc').value.trim();
+  const amount = document.getElementById('fin-amount').value;
+  if (!desc || !amount) { showToast('شرح و مبلغ الزامی است'); return; }
+  const fin = await apiPost('/finances', {
+    description: desc,
+    client: document.getElementById('fin-client').value || '-',
+    type: document.getElementById('fin-type').value,
+    amount: Number(amount),
+    date: document.getElementById('fin-date').value || new Date().toLocaleDateString('fa-IR'),
+    status: document.getElementById('fin-status').value
+  });
+  db.finances.unshift(fin);
+  closeModal('modal-add-finance');
+  renderFinance();
+  showToast('تراکنش ثبت شد ✓');
+}
+
+// ===== TEMPLATES =====
+const tplData = [
+  {id:1, name:'دادخواست', icon:'⚖️', desc:'دادخواست حقوقی به دادگاه',
+   text:'ریاست محترم دادگاه ...\n\nاینجانب [نام موکل] به وکالت از طرف موکل خود جناب/سرکار [نام موکل] به شماره پرونده [شماره پرونده]، موضوع [موضوع] را به استحضار می‌رسانم.\n\nخواسته:\n۱- ...\n\nدلائل و منضمات:\n۱- ...\n\nبا تقدیم احترام'},
+  {id:2, name:'شکواییه', icon:'📋', desc:'شکواییه کیفری',
+   text:'ریاست محترم دادسرا\n\nشاکی: [نام موکل]\nمتشکی‌عنه: ...\nموضوع شکایت: [موضوع]\nشماره پرونده: [شماره پرونده]\n\nشرح واقعه:\n...\n\nتقاضا:\nصدور قرار تأمین کیفری و رسیدگی به موضوع\n\nبا تقدیم احترام'},
+  {id:3, name:'لایحه دفاعیه', icon:'🛡️', desc:'لایحه دفاعیه در مرحله بدوی',
+   text:'ریاست محترم شعبه ...\n\nموکل: [نام موکل]\nپرونده: [شماره پرونده]\nموضوع: [موضوع]\n\nبا عنایت به محتویات پرونده و اظهارات موکل، به استحضار می‌رسانم:\n\n۱- ...\n۲- ...\n\nنتیجتاً:\nصدور رأی برائت موکل مورد استدعاست.\n\nوکیل دادگستری - علی رضایی'},
+  {id:4, name:'قرارداد وکالت', icon:'📜', desc:'قرارداد وکالت با موکل',
+   text:'قرارداد وکالت\n\nموکل: [نام موکل]\nوکیل: علی رضایی - وکیل دادگستری\nپرونده: [شماره پرونده] - موضوع: [موضوع]\n\nشرایط:\n۱- حق‌الوکاله: ...\n۲- مدت وکالت: ...\n۳- تعهدات طرفین: ...\n\nامضای موکل:                     امضای وکیل:'},
+  {id:5, name:'اظهارنامه', icon:'📮', desc:'اظهارنامه رسمی',
+   text:'اظهارنامه\n\nاظهارکننده: [نام موکل]\nمخاطب: ...\n\nبدینوسیله به استحضار می‌رساند که موضوع [موضوع] به شرح ذیل:\n\n...\n\nخواهشمند است ظرف مدت ... روز از تاریخ وصول این اظهارنامه نسبت به ... اقدام نمایید.\n\nتاریخ:'},
+  {id:6, name:'تجدیدنظرخواهی', icon:'🔄', desc:'دادخواست تجدیدنظر',
+   text:'ریاست محترم دادگاه تجدیدنظر\n\nتجدیدنظرخواه: [نام موکل]\nپرونده: [شماره پرونده]\nموضوع: [موضوع]\n\nبه استناد ماده ... قانون آیین دادرسی مدنی، از دادنامه شماره ... درخواست تجدیدنظر دارم.\n\nجهات تجدیدنظر:\n۱- ...\n۲- ...\n\nبا تقدیم احترام'},
+];
+let currentTplId = null;
+
+function renderTemplates() {
+  document.getElementById('templates-grid').innerHTML = tplData.map(t=>`
+    <div class="card" style="cursor:pointer;text-align:center" onclick="openTemplate(${t.id})">
+      <div style="font-size:42px;margin-bottom:12px">${t.icon}</div>
+      <div style="font-weight:700;font-size:14px;margin-bottom:6px">${t.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">${t.desc}</div>
+      <button class="btn btn-p btn-sm" onclick="event.stopPropagation();openTemplate(${t.id})">استفاده از قالب</button>
+    </div>
+  `).join('');
+}
+
+function openTemplate(id) {
+  currentTplId = id;
+  const t = tplData.find(x=>x.id===id);
+  document.getElementById('tpl-title').textContent = t.icon + ' ' + t.name;
+  document.getElementById('tpl-text').value = t.text;
+  openModal('modal-template');
+}
+
+function fillTemplate() {
+  if (!currentTplId) return;
+  const t = tplData.find(x=>x.id===currentTplId);
+  let text = t.text;
+  const client = document.getElementById('tpl-client').value || '[نام موکل]';
+  const casenum = document.getElementById('tpl-casenum').value || '[شماره پرونده]';
+  const subject = document.getElementById('tpl-subject').value || '[موضوع]';
+  text = text.replace(/\[نام موکل\]/g, client).replace(/\[شماره پرونده\]/g, casenum).replace(/\[موضوع\]/g, subject);
+  document.getElementById('tpl-text').value = text;
+}
+
+function printTemplate() {
+  const text = document.getElementById('tpl-text').value;
+  const w = window.open('','_blank');
+  w.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Tahoma;padding:40px;line-height:2;font-size:14px}</style></head><body><pre style="white-space:pre-wrap">${text}</pre></body></html>`);
+  w.print();
+}
+
+// ===== LAWS =====
+const lawsData = [
+  {id:1,title:'ماده ۳۰۸ قانون مدنی - غصب',cat:'civil',text:'غصب استیلا بر حق غیر است به نحو عدوان. اثبات ید بر مال غیر بدون مجوز هم در حکم غصب است.'},
+  {id:2,title:'ماده ۱ قانون مجازات اسلامی',cat:'criminal',text:'قانون مجازات اسلامی مشتمل بر جرایم و مجازات‌های حدود، قصاص، دیات و تعزیرات، اقدامات تأمینی و تربیتی...'},
+  {id:3,title:'ماده ۶۴ آیین دادرسی مدنی - دادخواست',cat:'procedure',text:'دادخواست باید به زبان فارسی در روی برگ‌های چاپی مخصوص نوشته شده و حاوی نکات ذیل باشد...'},
+  {id:4,title:'رأی وحدت رویه ۷۱۸ - الزام به تنظیم سند',cat:'unity',text:'با توجه به مواد ۱۰ و ۲۱۹ قانون مدنی، قولنامه‌های عادی تنظیم‌شده نسبت به طرفین و ورثه آنان لازم‌الوفا است...'},
+  {id:5,title:'نظریه مشورتی ۷۷۳۸ - اجرت‌المثل',cat:'advisory',text:'در صورتی که زوجه ثابت نماید کارهایی که شرعاً بر عهده او نبوده به دستور زوج انجام داده، مستحق اجرت‌المثل است.'},
+  {id:6,title:'ماده ۱۹۸ آیین دادرسی مدنی - سوگند',cat:'procedure',text:'در مواردی که دعوا یا دفاع مستند به شهادت شهود باشد، مدعی‌علیه می‌تواند با اداء سوگند از خود دفع اتهام نماید.'},
+  {id:7,title:'ماده ۶۷۴ قانون مجازات - خیانت در امانت',cat:'criminal',text:'هرگاه اموال منقول یا غیرمنقول یا نوشته‌هایی از قبیل سفته و چک و قبض به عنوان اجاره یا امانت به کسی داده شود...'},
+  {id:8,title:'رأی وحدت رویه ۷۳۳ - مهریه',cat:'unity',text:'مهریه‌ای که در عقدنامه رسمی تعیین شده است در صلاحیت دادگاه خانواده بوده و از ادله مستند در دعاوی خانوادگی محسوب می‌شود.'},
+];
+
+function renderLaws(list) {
+  const data = list || lawsData;
+  document.getElementById('laws-list').innerHTML = data.map(l=>`
+    <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="showLaw(${l.id})">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="font-weight:700;font-size:13.5px">${l.title}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge b-blue">${{civil:'مدنی',criminal:'کیفری',procedure:'آیین دادرسی',unity:'وحدت رویه',advisory:'مشورتی'}[l.cat]}</span>
+          <button class="btn btn-sm btn-o" onclick="event.stopPropagation();showLaw(${l.id})">مشاهده متن</button>
+          <button class="btn btn-sm btn-a" onclick="event.stopPropagation();showToast('ذخیره شد ✓')">⭐ ذخیره</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6">${l.text.substring(0,100)}...</p>
+    </div>
+  `).join('') || '<div class="empty"><div class="empty-icon">📚</div><h3>موردی یافت نشد</h3></div>';
+}
+
+function filterLaws(q) {
+  renderLaws(lawsData.filter(l=>l.title.includes(q)||l.text.includes(q)));
+}
+
+function filterLawCat(cat) {
+  renderLaws(cat ? lawsData.filter(l=>l.cat===cat) : lawsData);
+}
+
+function showLaw(id) {
+  const l = lawsData.find(x=>x.id===id);
+  document.getElementById('law-title').textContent = l.title;
+  document.getElementById('law-content').innerHTML = `
+    <div class="alert al-i">${{civil:'قانون مدنی',criminal:'قانون مجازات اسلامی',procedure:'آیین دادرسی',unity:'رأی وحدت رویه',advisory:'نظریه مشورتی'}[l.cat]}</div>
+    <p style="font-size:14px;line-height:2;color:var(--text)">${l.text}</p>
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn btn-a" onclick="showToast('ذخیره در موارد پرکاربرد ✓')">⭐ ذخیره</button>
+      <button class="btn btn-o" onclick="window.print()">🖨️ چاپ</button>
+    </div>
+  `;
+  openModal('modal-law');
+}
+
+// ===== REPORTS =====
+function renderReports() {
+  const byType = {};
+  db.cases.forEach(c=>{ byType[c.status] = (byType[c.status]||0)+1; });
+  const typeLabels = {active:'در حال رسیدگی',pending:'در انتظار',closed:'مختومه',appeal:'تجدیدنظر'};
+  const typeColors = {active:'var(--success)',pending:'var(--warn)',closed:'var(--muted)',appeal:'var(--info)'};
+  document.getElementById('report-by-type').innerHTML = Object.entries(byType).map(([k,v])=>`
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span>${typeLabels[k]||k}</span><span style="font-weight:700">${v}</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${(v/db.cases.length*100).toFixed(0)}%;background:${typeColors[k]||'var(--pl)'}"></div></div>
+    </div>
+  `).join('');
+
+  const closed = db.cases.filter(c=>c.status==='closed').length;
+  const rate = db.cases.length ? Math.round(closed/db.cases.length*100) : 0;
+  document.getElementById('report-success').innerHTML = `
+    <div style="text-align:center;padding:20px">
+      <div style="font-size:52px;font-weight:800;color:var(--success)">${rate}٪</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">نرخ پرونده‌های مختومه</div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${rate}%;background:var(--success)"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px">
+      <span>مختومه: ${closed}</span>
+      <span>کل: ${db.cases.length}</span>
+    </div>
+  `;
+
+  const months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور'];
+  document.getElementById('report-tbody').innerHTML = months.map((m,i)=>`
+    <tr>
+      <td>${m}</td>
+      <td>${[3,5,4,6,5,7][i]}</td>
+      <td>${[1,2,1,3,2,3][i]}</td>
+      <td>${fmtMoney([12,18,15,28,22,35][i]*1000000)}</td>
+      <td><span class="badge b-active">${[65,72,68,78,74,82][i]}٪</span></td>
+    </tr>
+  `).join('');
+}
+
+// ===== MESSAGES =====
+let currentContact = 0;
+function renderMessages() {
+  document.getElementById('chat-contacts').innerHTML = db.messages.map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:8px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s" onclick="openChat(${i})" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--primary);flex-shrink:0">${c.contact.charAt(0)}</div>
+      <div>
+        <div style="font-weight:600;font-size:13px">${c.contact}</div>
+        <div style="font-size:11px;color:var(--muted)">${c.msgs[c.msgs.length-1].text.substring(0,30)}...</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openChat(i) {
+  currentContact = i;
+  const c = db.messages[i];
+  document.getElementById('chat-title').textContent = '💬 ' + c.contact;
+  const box = document.getElementById('chat-messages');
+  box.innerHTML = c.msgs.map(m=>`
+    <div style="display:flex;justify-content:${m.from==='lawyer'?'flex-start':'flex-end'};margin-bottom:10px">
+      <div style="max-width:70%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;background:${m.from==='lawyer'?'var(--pl)':'var(--bg)'};color:${m.from==='lawyer'?'#fff':'var(--text)'};border:${m.from==='lawyer'?'none':'1px solid var(--border)'}">
+        ${m.text}
+        <div style="font-size:10px;opacity:.7;margin-top:4px;text-align:left">${m.time}</div>
+      </div>
+    </div>
+  `).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || currentContact === null) return;
+  const now = new Date();
+  db.messages[currentContact].msgs.push({
+    from:'lawyer',
+    text,
+    time: now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')
+  });
+  input.value = '';
+  openChat(currentContact);
+  showToast('پیام ارسال شد ✓');
+}
+
+// ===== EXPORT =====
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'legal-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  showToast('خروجی داده‌ها دانلود شد ✓');
+}
+
+// ===== INIT =====
+async function init() {
+  setDate();
+  renderNotifications();
+
+  if (TOKEN && CURRENT_USER) {
+    try {
+      // test token validity
+      const test = await fetch('http://localhost:3000/api/cases', { headers: apiHeaders() });
+      if (test.status === 401) throw new Error('invalid');
+      
+      document.getElementById('login-page').style.display = 'none';
+      document.querySelector('.s-uname').textContent = CURRENT_USER.name;
+      document.querySelector('.s-avatar').textContent = CURRENT_USER.name.charAt(0);
+      document.getElementById('current-role-label').textContent =
+        {lawyer:'وکیل دادگستری', admin:'مدیر سیستم', secretary:'منشی', trainee:'کارآموز'}[CURRENT_USER.role] || 'وکیل';
+      await loadAllData();
+      renderDashboard();
+    } catch(e) {
+      doLogout();
+      document.getElementById('login-page').style.display = 'flex';
+    }
+  } else {
+    document.getElementById('login-page').style.display = 'flex';
+  }
+
+  document.querySelectorAll('.overlay').forEach(o => {
+    o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); });
+  });
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
