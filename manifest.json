@@ -12,16 +12,24 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192/1a3c5e/c8a84b?text=%E2%9A%96",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
-      "src": "https://via.placeholder.com/512x512/1a3c5e/c8a84b?text=%E2%9A%96",
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icon.svg",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
     }
   ]
 }
