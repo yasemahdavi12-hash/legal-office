@@ -1,5 +1,63 @@
+# Dependencies
 node_modules/
-uploads/
-db.json
-*.log
+
+# Environment & secrets (never commit)
 .env
+.env.*
+!.env.example
+
+# Local uploads & user-generated files
+uploads/
+storage/uploads/*
+!storage/uploads/.gitkeep
+
+# Local database files
+database/*.sqlite
+database/*.sqlite-*
+db.json
+.mysql-test-data/
+
+# Backups & logs
+backups/
+logs/
+*.log
+
+# Keys & certificates
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+
+# Test / tooling output
+coverage/
+.nyc_output/
+npm-audit.json
+npm-outdated.json
+npm-audit-fix.json
+
+# Build artifacts
+dist/
+build/
+.cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Cursor local state (optional)
+.cursor/
+
+# Temp
+tmp/
+temp/
+*.tmp

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f2540">
+<title>ورود | قانون در جیب شما</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#0f2540;--pl:#1e4a7a;--bg:#eef2f6;--text:#1a2332;--muted:#64748b;--border:#d8e0ea;--danger:#b91c1c;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{font-family:var(--font);background:linear-gradient(160deg,#071422,#0f2540 55%,#1e4a7a);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;color:var(--text)}
+button,input{font-family:inherit;outline:none}
+button{cursor:pointer}
+.auth-box{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,.28)}
+.auth-box h1{font-size:18px;color:var(--primary);text-align:center;margin-bottom:4px}
+.auth-box p.sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:12px;font-weight:600;margin-bottom:5px}
+.fc{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px}
+.fc:focus{border-color:var(--pl);box-shadow:0 0 0 3px rgba(30,74,122,.15)}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;border:none;width:100%}
+.btn-p{background:var(--pl);color:#fff}
+.btn-o{background:#fff;border:1.5px solid var(--border);color:var(--text);margin-top:10px}
+.err{background:#fef2f2;color:#7f1d1d;padding:10px;border-radius:8px;font-size:12px;margin-bottom:12px;display:none;border-right:3px solid var(--danger)}
+.err.show{display:block}
+.links{margin-top:16px;font-size:12px;text-align:center;color:var(--muted);line-height:1.8}
+.links a{color:var(--pl);text-decoration:none;font-weight:600}
+.hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="auth-box">
+  <h1>ورود به سامانه</h1>
+  <p class="sub">وکیل، مدیر یا موکل — پس از ورود به محیط مناسب هدایت می‌شوید</p>
+  <div class="err" id="login-err"></div>
+  <div id="step-login">
+    <div class="fg"><label class="fl" for="login-email">ایمیل</label><input class="fc" id="login-email" type="email" autocomplete="username"></div>
+    <div class="fg"><label class="fl" for="login-pass">رمز عبور</label><input class="fc" id="login-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button type="button" class="btn btn-p" id="btn-login" onclick="doLogin()">ورود</button>
+    <button type="button" class="btn btn-o" onclick="location.href='/?lawyer_register=1'">ثبت‌نام وکیل / پیش‌نمایش</button>
+  </div>
+  <div id="step-mfa" style="display:none">
+    <p class="hint">کد تأیید دو مرحله‌ای را وارد کنید</p>
+    <div class="fg"><label class="fl" for="mfa-code">کد ۶ رقمی یا کد بازیابی</label><input class="fc" id="mfa-code" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')doVerifyMfa()"></div>
+    <button type="button" class="btn btn-p" onclick="doVerifyMfa()">تأیید</button>
+    <button type="button" class="btn btn-o" onclick="cancelMfa()">بازگشت</button>
+  </div>
+  <div id="step-setup" style="display:none">
+    <p class="hint">فعال‌سازی MFA الزامی است — پس از فعال‌سازی دوباره وارد می‌شوید</p>
+    <div class="fg"><label class="fl">کلید secret</label><input class="fc" id="mfa-secret" readonly></div>
+    <div class="fg"><label class="fl">کد اپ</label><input class="fc" id="mfa-enable-code" onkeydown="if(event.key==='Enter')doEnableMfa()"></div>
+    <button type="button" class="btn btn-p" onclick="doEnableMfa()">فعال‌سازی و ادامه</button>
+    <button type="button" class="btn btn-o" onclick="cancelMfa()">انصراف</button>
+  </div>
+  <div class="links">
+    <a href="/portal#register">ثبت‌نام موکل</a>
+    ·
+    <a href="/portal">پورتال موکل</a>
+    ·
+    <a href="/?lawyer_register=1">ثبت‌نام وکیل</a>
+    ·
+    <a href="/login?next=/admin">ورود مدیر</a>
+  </div>
+  <p class="hint" style="text-align:center;margin-top:10px">حساب مدیر فقط از طریق seed/env ساخته می‌شود (npm run seed:admin).</p>
+</div>
+<script>
+const API_BASE = `${location.origin}/api`;
+
+const params = new URLSearchParams(location.search);
+const NEXT = params.get('next') || '';
+const INVITE_PARAM = params.get('invite') || '';
+if (INVITE_PARAM) sessionStorage.setItem('portal_invite_token', INVITE_PARAM);
+
+let pendingMfaToken = null;
+let pendingSetupToken = null;
+let pendingEmail = '';
+let pendingPass = '';
+
+function showErr(msg) {
+  const el = document.getElementById('login-err');
+  if (!msg) { el.classList.remove('show'); el.textContent = ''; return; }
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function setStep(step) {
+  document.getElementById('step-login').style.display = step === 'login' ? '' : 'none';
+  document.getElementById('step-mfa').style.display = step === 'mfa' ? '' : 'none';
+  document.getElementById('step-setup').style.display = step === 'setup' ? '' : 'none';
+}
+function cancelMfa() {
+  pendingMfaToken = null;
+  pendingSetupToken = null;
+  showErr('');
+  setStep('login');
+}
+function syncAdminMirrorFromLegal() {
+  const token = localStorage.getItem('legal_token');
+  const raw = localStorage.getItem('legal_user');
+  if (!token || !raw) return;
+  let user = null;
+  try { user = JSON.parse(raw); } catch { user = null; }
+  if (!user || user.role !== 'admin') return;
+  localStorage.setItem('legal_admin_token', token);
+  const ref = localStorage.getItem('legal_refresh');
+  if (ref) localStorage.setItem('legal_admin_refresh', ref);
+  else localStorage.removeItem('legal_admin_refresh');
+  localStorage.setItem('legal_admin_user', raw);
+}
+function persistAuth(data) {
+  const access = data && (data.accessToken || data.token);
+  if (!access) return false;
+  localStorage.setItem('legal_token', access);
+  if (data.refreshToken) localStorage.setItem('legal_refresh', data.refreshToken);
+  else localStorage.removeItem('legal_refresh');
+  if (data.user) localStorage.setItem('legal_user', JSON.stringify(data.user));
+  syncAdminMirrorFromLegal();
+  return true;
+}
+async function tryAcceptStoredInvite() {
+  const inv = sessionStorage.getItem('portal_invite_token');
+  if (!inv) return;
+  const token = localStorage.getItem('legal_token');
+  if (!token) return;
+  const r = await fetch(API_BASE + '/portal/invite/' + encodeURIComponent(inv) + '/accept', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: '{}'
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'پذیرش دعوت ناموفق بود');
+  sessionStorage.removeItem('portal_invite_token');
+}
+
+function normPath(pathname) {
+  const p = (pathname || '/').replace(/\/index\.html$/i, '') || '/';
+  return p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p;
+}
+function navTo(url) {
+  try {
+    const target = normPath(new URL(url, location.origin).pathname);
+    if (target === normPath(location.pathname)) return;
+  } catch { /* ignore */ }
+  location.replace(url);
+}
+function homeForRole(role) {
+  if (role === 'client') return '/portal';
+  if (role === 'admin') return '/admin';
+  return '/';
+}
+function redirectForRole(user) {
+  const role = user && user.role;
+  if (role === 'client') {
+    navTo(NEXT && NEXT.startsWith('/portal') ? NEXT : '/portal');
+    return;
+  }
+  if (role === 'admin') {
+    localStorage.setItem('legal_admin_token', localStorage.getItem('legal_token') || '');
+    const ref = localStorage.getItem('legal_refresh');
+    if (ref) localStorage.setItem('legal_admin_refresh', ref);
+    localStorage.setItem('legal_admin_user', localStorage.getItem('legal_user') || '');
+    navTo(NEXT && NEXT.startsWith('/admin') ? NEXT : '/admin');
+    return;
+  }
+  if (role === 'lawyer') {
+    const dest = NEXT && !NEXT.startsWith('/portal') && NEXT !== '/login' ? NEXT : '/';
+    navTo(dest);
+    return;
+  }
+  navTo('/');
+}
+function clearStoredAuth() {
+  localStorage.removeItem('legal_token');
+  localStorage.removeItem('legal_refresh');
+  localStorage.removeItem('legal_user');
+  localStorage.removeItem('legal_admin_token');
+  localStorage.removeItem('legal_admin_refresh');
+  localStorage.removeItem('legal_admin_user');
+}
+function isNetworkFailure(err) {
+  return err instanceof TypeError || (err && err.message === 'Failed to fetch');
+}
+async function finishSession(data) {
+  if (!persistAuth(data)) {
+    showErr('توکن ورود دریافت نشد');
+    return;
+  }
+  if (data.user && data.user.role === 'client') {
+    try {
+      await tryAcceptStoredInvite();
+    } catch {
+      sessionStorage.removeItem('portal_invite_token');
+    }
+    navTo(NEXT && NEXT.startsWith('/portal') ? NEXT : '/portal');
+    return;
+  }
+  redirectForRole(data.user);
+}
+async function startMfaSetup(setupToken) {
+  pendingSetupToken = setupToken;
+  const r = await fetch(API_BASE + '/mfa/setup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + setupToken }
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'خطا در MFA');
+  document.getElementById('mfa-secret').value = data.secret || '';
+  setStep('setup');
+}
+async function doEnableMfa() {
+  showErr('');
+  const code = document.getElementById('mfa-enable-code').value.trim();
+  if (!code || !pendingSetupToken) { showErr('کد MFA الزامی است'); return; }
+  try {
+    const r = await fetch(API_BASE + '/mfa/enable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + pendingSetupToken },
+      body: JSON.stringify({ code })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'کد نامعتبر');
+    pendingSetupToken = null;
+    const login = await fetch(API_BASE + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingEmail, password: pendingPass })
+    });
+    const loginData = await login.json().catch(() => ({}));
+    if (!login.ok) throw new Error(loginData.error || 'ورود ناموفق');
+    if (loginData.mfaRequired && loginData.mfaToken) {
+      pendingMfaToken = loginData.mfaToken;
+      setStep('mfa');
+      return;
+    }
+    finishSession(loginData);
+  } catch (e) {
+    showErr(e.message || 'خطا');
+  }
+}
+async function doVerifyMfa() {
+  showErr('');
+  const code = document.getElementById('mfa-code').value.trim();
+  if (!code || !pendingMfaToken) { showErr('کد تأیید الزامی است'); return; }
+  try {
+    const r = await fetch(API_BASE + '/mfa/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mfaToken: pendingMfaToken, code })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'کد نامعتبر');
+    finishSession(data);
+  } catch (e) {
+    showErr(e.message || 'خطا');
+  }
+}
+async function doLogin() {
+  showErr('');
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!email || !pass) { showErr('ایمیل و رمز الزامی است'); return; }
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  try {
+    const r = await fetch(API_BASE + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { showErr(data.error || 'خطا در ورود'); return; }
+    pendingEmail = email;
+    pendingPass = pass;
+    if (data.mfaSetupRequired && data.setupToken) {
+      await startMfaSetup(data.setupToken);
+      return;
+    }
+    if (data.mfaRequired && data.mfaToken) {
+      pendingMfaToken = data.mfaToken;
+      setStep('mfa');
+      return;
+    }
+    finishSession(data);
+  } catch (e) {
+    showErr(isNetworkFailure(e) ? 'Backend در دسترس نیست. سرور را اجرا کنید (npm start).' : (e.message || 'خطا در ورود'));
+  } finally {
+    btn.disabled = false;
+  }
+}
+(async function bootstrap() {
+  showErr('');
+  const token = localStorage.getItem('legal_token');
+  if (!token) return;
+  try {
+    const r = await fetch(API_BASE + '/me', { headers: { Authorization: 'Bearer ' + token } });
+    if (r.status === 401) {
+      clearStoredAuth();
+      return;
+    }
+    if (!r.ok) return;
+    const me = await r.json().catch(() => null);
+    if (me && me.role) {
+      localStorage.setItem('legal_user', JSON.stringify(me));
+      syncAdminMirrorFromLegal();
+    }
+  } catch {
+    /* Backend down — show login form; do not treat as logged in */
+  }
+})();
+</script>
+</body>
+</html>

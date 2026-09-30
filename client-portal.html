@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f2540">
+<title>پورتال موکل | قانون در جیب شما</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#0f2540;--pl:#1e4a7a;--accent:#b8860b;--bg:#eef2f6;
+  --text:#1a2332;--muted:#64748b;--border:#d8e0ea;--danger:#b91c1c;--success:#15803d;
+  --r:10px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+button,input{font-family:inherit;outline:none}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--pl);outline-offset:2px}
+.auth-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#071422,#0f2540 55%,#1e4a7a)}
+.auth-box{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,.28)}
+.auth-box h1{font-size:18px;color:var(--primary);text-align:center;margin-bottom:4px}
+.auth-box p.sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;padding:10px;border:1.5px solid var(--border);background:#fff;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.tab.active{background:var(--pl);border-color:var(--pl);color:#fff}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:12px;font-weight:600;margin-bottom:5px}
+.fc{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px}
+.fc:focus{border-color:var(--pl);box-shadow:0 0 0 3px rgba(30,74,122,.15)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;border:none}
+.btn-p{background:var(--pl);color:#fff;width:100%}
+.btn-o{background:#fff;border:1.5px solid var(--border);color:var(--text)}
+.btn-sm{padding:6px 10px;font-size:11px}
+.err{background:#fef2f2;color:#7f1d1d;padding:10px;border-radius:8px;font-size:12px;margin-bottom:12px;display:none;border-right:3px solid var(--danger)}
+.err.show{display:block}
+.layout{display:none;min-height:100vh;flex-direction:column}
+.layout.show{display:flex}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar h2{font-size:16px;color:var(--primary)}
+.nav{display:flex;gap:6px;flex-wrap:wrap}
+.nav .btn-sm.active{background:var(--pl);color:#fff;border-color:var(--pl)}
+.content{padding:16px;max-width:720px;margin:0 auto;width:100%}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,37,64,.06)}
+.card-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap}
+.card-title{font-size:14px;font-weight:700;color:var(--primary)}
+.badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-pending{background:#fef3c7;color:#92400e}
+.b-active{background:#dcfce7;color:#166534}
+.b-closed{background:#f1f5f9;color:#475569}
+.row{padding:12px 0;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.6}
+.empty{text-align:center;padding:24px;color:var(--muted);font-size:13px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--primary);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:200;transition:transform .25s;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
+.case-msg-list{display:flex;flex-direction:column;gap:10px;max-height:min(320px,45vh);overflow-y:auto;margin:12px 0;padding:4px}
+.case-msg{border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7;max-width:92%}
+.case-msg.lawyer{align-self:flex-start;background:#eef4fb;border:1px solid #c7d9ee}
+.case-msg.client{align-self:flex-end;background:#f0fdf4;border:1px solid #bbf7d0}
+.case-msg-meta{font-size:11px;color:var(--muted);margin-top:6px}
+.tb-btn{border:none;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;position:relative}
+.nb-dot{position:absolute;top:-4px;left:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.notif-panel{display:none;position:fixed;top:56px;left:16px;right:16px;max-width:420px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.12);z-index:300;max-height:70vh;flex-direction:column}
+.notif-panel.open{display:flex}
+.np-hd{padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.np-body{overflow-y:auto;flex:1}
+.ni-item{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;cursor:pointer}
+.ni-item.unread{background:#f0f7ff}
+.ni-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;background:var(--pl)}
+.ni-title{font-size:12px;font-weight:700;color:var(--primary)}
+.ni-text{font-size:12px;line-height:1.55;margin-top:2px}
+.ni-time{font-size:10px;color:var(--muted);margin-top:4px}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="auth-gate">
+  <div class="auth-box">
+    <h1>پورتال موکل</h1>
+    <p class="sub">قانون در جیب شما — مشاهده پرونده‌های دعوت‌شده</p>
+    <div class="tabs">
+      <button type="button" class="tab active" id="tab-register" onclick="setAuthTab('register')">ثبت‌نام</button>
+      <button type="button" class="tab" id="tab-login" onclick="goSharedLogin()">ورود</button>
+    </div>
+    <div class="err" id="auth-err"></div>
+    <div id="panel-register">
+      <div class="fg"><label class="fl" for="reg-name">نام</label><input class="fc" id="reg-name" autocomplete="name"></div>
+      <div class="fg"><label class="fl" for="reg-email">ایمیل</label><input class="fc" id="reg-email" type="email" autocomplete="username"></div>
+      <div class="fg"><label class="fl" for="reg-phone">موبایل</label><input class="fc" id="reg-phone" inputmode="tel" placeholder="09xxxxxxxxx"></div>
+      <div class="fg"><label class="fl" for="reg-pass">رمز عبور</label><input class="fc" id="reg-pass" type="password" autocomplete="new-password"></div>
+      <p class="hint">شماره موبایل باید با شماره ثبت‌شده توسط وکیل در پرونده یکسان باشد تا دعوت را ببینید.</p>
+      <button type="button" class="btn btn-p" id="btn-register" onclick="portalRegister()">ثبت‌نام</button>
+      <p class="hint" style="margin-top:12px;text-align:center">حساب دارید؟ <a href="/login?next=/portal" style="color:var(--pl);font-weight:600">ورود از صفحه مشترک</a></p>
+    </div>
+  </div>
+</div>
+
+<div class="layout" id="app-layout">
+  <header class="topbar">
+    <h2 id="user-greeting">پورتال موکل</h2>
+    <div class="nav">
+      <button type="button" class="tb-btn" onclick="togglePortalNotif()" aria-label="اعلان‌ها" title="اعلان‌ها">
+        <span aria-hidden="true">🔔</span><span class="nb-dot" id="portal-notif-count" hidden>0</span>
+      </button>
+      <button type="button" class="btn btn-o btn-sm active" data-page="invites" onclick="showPortalPage('invites',this)">دعوت‌ها</button>
+      <button type="button" class="btn btn-o btn-sm" data-page="cases" onclick="showPortalPage('cases',this)">پرونده‌های من</button>
+      <button type="button" class="btn btn-o btn-sm" onclick="portalLogout()">خروج</button>
+    </div>
+  </header>
+  <div class="notif-panel" id="portal-notif-panel" role="region" aria-label="اعلان‌ها">
+    <div class="np-hd">اعلان‌ها <button type="button" class="btn btn-sm btn-o" onclick="closePortalNotif()">بستن</button></div>
+    <div class="np-body" id="portal-notif-list"></div>
+    <div class="np-hd" style="border-top:1px solid var(--border);border-bottom:none">
+      <button type="button" class="btn btn-sm btn-o" style="width:100%" onclick="markAllPortalNotificationsRead()">خوانده‌شده</button>
+    </div>
+  </div>
+  <main class="content">
+    <section class="page active" id="page-invites">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">دعوت‌های در انتظار</div><button type="button" class="btn btn-o btn-sm" onclick="loadPendingInvites()">بروزرسانی</button></div>
+        <div id="invites-list"><div class="empty">در حال بارگذاری…</div></div>
+      </div>
+    </section>
+    <section class="page" id="page-cases">
+      <div class="card" id="cases-list-card">
+        <div class="card-hd"><div class="card-title">پرونده‌های فعال</div><button type="button" class="btn btn-o btn-sm" onclick="loadPortalCases()">بروزرسانی</button></div>
+        <div id="cases-list"><div class="empty">در حال بارگذاری…</div></div>
+      </div>
+      <div class="card" id="case-detail-card" style="display:none">
+        <div class="card-hd">
+          <div class="card-title" id="case-detail-title">جزئیات پرونده</div>
+          <button type="button" class="btn btn-o btn-sm" onclick="hideCaseDetail()">بستن</button>
+        </div>
+        <div id="case-detail-body"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = `${location.origin}/api`;
+
+function loadLegalSession() {
+  let user = null;
+  try { user = JSON.parse(localStorage.getItem('legal_user') || 'null'); } catch { user = null; }
+  let token = localStorage.getItem('legal_token') || '';
+  let refresh = localStorage.getItem('legal_refresh') || '';
+  if (!token) {
+    token = localStorage.getItem('portal_token') || '';
+    refresh = localStorage.getItem('portal_refresh') || '';
+    try { user = JSON.parse(localStorage.getItem('portal_user') || 'null'); } catch { user = null; }
+    if (token) {
+      localStorage.setItem('legal_token', token);
+      if (refresh) localStorage.setItem('legal_refresh', refresh);
+      if (user) localStorage.setItem('legal_user', JSON.stringify(user));
+      localStorage.removeItem('portal_token');
+      localStorage.removeItem('portal_refresh');
+      localStorage.removeItem('portal_user');
+    }
+  }
+  return { token, refresh, user };
+}
+
+const _session = loadLegalSession();
+let TOKEN = _session.token;
+let REFRESH_TOKEN = _session.refresh;
+let CURRENT_USER = _session.user;
+
+function apiHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (TOKEN) h.Authorization = 'Bearer ' + TOKEN;
+  return h;
+}
+
+function showAuthErr(msg) {
+  const el = document.getElementById('auth-err');
+  if (!msg) { el.classList.remove('show'); el.textContent = ''; return; }
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function normPath(pathname) {
+  const p = (pathname || '/').replace(/\/index\.html$/i, '') || '/';
+  return p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p;
+}
+function navTo(url) {
+  try {
+    const target = normPath(new URL(url, location.origin).pathname);
+    if (target === normPath(location.pathname)) return;
+  } catch { /* ignore */ }
+  window.location.replace(url);
+}
+function goSharedLogin() {
+  navTo('/login?next=/portal');
+}
+function setAuthTab(which) {
+  if (which === 'login') { goSharedLogin(); return; }
+  document.getElementById('tab-register').classList.add('active');
+  document.getElementById('tab-login').classList.remove('active');
+  showAuthErr('');
+}
+
+async function apiPortal(path, options = {}) {
+  const r = await fetch(API_BASE + path, { ...options, headers: { ...apiHeaders(), ...(options.headers || {}) } });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const err = new Error(body.error || 'خطای سرور');
+    err.status = r.status;
+    throw err;
+  }
+  return body;
+}
+
+let portalNotifications = [];
+let portalNotifUnread = 0;
+
+function portalNotifRelativeTime(iso) {
+  if (!iso) return '';
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return '';
+  const m = Math.floor((Date.now() - t) / 60000);
+  if (m < 1) return 'همین الان';
+  if (m < 60) return m + ' دقیقه پیش';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + ' ساعت پیش';
+  return Math.floor(h / 24) + ' روز پیش';
+}
+
+let portalNotifPollTimer = null;
+function startPortalNotificationPolling() {
+  if (portalNotifPollTimer) return;
+  portalNotifPollTimer = setInterval(() => {
+    if (TOKEN && document.visibilityState === 'visible') refreshPortalNotifUnread();
+  }, 45000);
+}
+function stopPortalNotificationPolling() {
+  if (portalNotifPollTimer) {
+    clearInterval(portalNotifPollTimer);
+    portalNotifPollTimer = null;
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && TOKEN) refreshPortalNotifUnread();
+});
+
+async function refreshPortalNotifUnread() {
+  const el = document.getElementById('portal-notif-count');
+  if (!TOKEN) { portalNotifUnread = 0; if (el) el.hidden = true; return; }
+  try {
+    const data = await apiPortal('/notifications/unread-count');
+    portalNotifUnread = Number(data.unreadCount) || 0;
+    if (el) { el.textContent = String(portalNotifUnread); el.hidden = portalNotifUnread <= 0; }
+  } catch { if (el) el.hidden = true; }
+}
+
+async function loadPortalNotifications(render = true) {
+  if (!TOKEN) return;
+  try {
+    const data = await apiPortal('/notifications?limit=20&page=1');
+    portalNotifications = Array.isArray(data.items) ? data.items : [];
+    await refreshPortalNotifUnread();
+    if (render) renderPortalNotifications();
+  } catch { /* ignore */ }
+}
+
+function renderPortalNotifications() {
+  const list = document.getElementById('portal-notif-list');
+  if (!list) return;
+  list.replaceChildren();
+  if (!portalNotifications.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'اعلانی وجود ندارد.';
+    list.appendChild(empty);
+    return;
+  }
+  for (const n of portalNotifications) {
+    const row = document.createElement('div');
+    row.className = 'ni-item' + (n.isRead ? '' : ' unread');
+    row.addEventListener('click', () => onPortalNotificationClick(n.id));
+    const dot = document.createElement('div');
+    dot.className = 'ni-dot';
+    dot.style.background = n.isRead ? 'var(--muted)' : 'var(--pl)';
+    const body = document.createElement('div');
+    const titleEl = document.createElement('div');
+    titleEl.className = 'ni-title';
+    titleEl.textContent = n.title || 'اعلان';
+    const textEl = document.createElement('div');
+    textEl.className = 'ni-text';
+    textEl.textContent = n.body || '';
+    const timeEl = document.createElement('div');
+    timeEl.className = 'ni-time';
+    timeEl.textContent = portalNotifRelativeTime(n.createdAt);
+    body.appendChild(titleEl);
+    body.appendChild(textEl);
+    body.appendChild(timeEl);
+    row.appendChild(dot);
+    row.appendChild(body);
+    list.appendChild(row);
+  }
+}
+
+async function togglePortalNotif() {
+  const panel = document.getElementById('portal-notif-panel');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  if (opening) await loadPortalNotifications(true);
+}
+
+function closePortalNotif() {
+  document.getElementById('portal-notif-panel')?.classList.remove('open');
+}
+
+async function markAllPortalNotificationsRead() {
+  if (!TOKEN) return;
+  try {
+    await apiPortal('/notifications/read-all', { method: 'POST' });
+    portalNotifications = portalNotifications.map((n) => ({ ...n, isRead: true }));
+    await refreshPortalNotifUnread();
+    renderPortalNotifications();
+  } catch (e) { toast(e.message || 'خطا'); }
+}
+
+async function onPortalNotificationClick(id) {
+  const n = portalNotifications.find((x) => x.id === id);
+  if (!n || !TOKEN) return;
+  try {
+    if (!n.isRead) {
+      await apiPortal('/notifications/' + id + '/read', { method: 'POST' });
+      n.isRead = true;
+      await refreshPortalNotifUnread();
+    }
+  } catch { /* ignore */ }
+  closePortalNotif();
+  if (n.caseId) {
+    showPortalPage('cases', document.querySelector('.nav .btn[data-page="cases"]'));
+    await openPortalCase(n.caseId);
+  }
+  renderPortalNotifications();
+}
+
+function saveSession(data) {
+  TOKEN = data.accessToken || data.token || '';
+  REFRESH_TOKEN = data.refreshToken || '';
+  CURRENT_USER = data.user || null;
+  localStorage.setItem('legal_token', TOKEN);
+  if (REFRESH_TOKEN) localStorage.setItem('legal_refresh', REFRESH_TOKEN);
+  else localStorage.removeItem('legal_refresh');
+  if (CURRENT_USER) localStorage.setItem('legal_user', JSON.stringify(CURRENT_USER));
+  localStorage.removeItem('portal_token');
+  localStorage.removeItem('portal_refresh');
+  localStorage.removeItem('portal_user');
+}
+
+function clearSession() {
+  stopPortalNotificationPolling();
+  TOKEN = ''; REFRESH_TOKEN = ''; CURRENT_USER = null;
+  localStorage.removeItem('legal_token');
+  localStorage.removeItem('legal_refresh');
+  localStorage.removeItem('legal_user');
+  localStorage.removeItem('portal_token');
+  localStorage.removeItem('portal_refresh');
+  localStorage.removeItem('portal_user');
+}
+
+function showApp() {
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app-layout').classList.add('show');
+  const name = CURRENT_USER?.name || 'موکل';
+  document.getElementById('user-greeting').textContent = 'سلام، ' + name;
+  loadPendingInvites();
+  loadPortalCases();
+  refreshPortalNotifUnread();
+  startPortalNotificationPolling();
+}
+
+async function tryAcceptInviteFromStorage() {
+  const inv = sessionStorage.getItem('portal_invite_token');
+  if (!inv || !TOKEN) return;
+  await apiPortal('/portal/invite/' + encodeURIComponent(inv) + '/accept', { method: 'POST', body: '{}' });
+  sessionStorage.removeItem('portal_invite_token');
+}
+
+async function portalRegister() {
+  showAuthErr('');
+  const btn = document.getElementById('btn-register');
+  btn.disabled = true;
+  btn.textContent = 'در حال ثبت‌نام…';
+  try {
+    const data = await apiPortal('/portal/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: document.getElementById('reg-name').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
+        phone: document.getElementById('reg-phone').value.trim(),
+        password: document.getElementById('reg-pass').value
+      })
+    });
+    saveSession(data);
+    try {
+      await tryAcceptInviteFromStorage();
+      toast('ثبت‌نام موفق — دعوت پذیرفته شد');
+    } catch (e) {
+      toast('ثبت‌نام موفق — ' + (e.message || 'دعوت هنوز پذیرفته نشد'));
+    }
+    window.location.replace('/portal');
+  } catch (e) {
+    showAuthErr(e.message || 'ثبت‌نام ناموفق');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'ثبت‌نام';
+  }
+}
+
+function portalLogout() {
+  clearSession();
+  window.location.href = '/login?next=/portal';
+}
+
+function showPortalPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav .btn-sm[data-page]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (id === 'invites') loadPendingInvites();
+  if (id === 'cases') loadPortalCases();
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function formatDate(v) {
+  if (!v) return '—';
+  try { return new Date(v).toLocaleDateString('fa-IR'); } catch { return String(v); }
+}
+
+async function loadPendingInvites() {
+  const box = document.getElementById('invites-list');
+  if (!TOKEN) return;
+  box.innerHTML = '<div class="empty">در حال بارگذاری…</div>';
+  try {
+    const list = await apiPortal('/portal/client-access/pending');
+    const items = Array.isArray(list) ? list : [];
+    if (!items.length) {
+      box.innerHTML = '<div class="empty">دعوت در انتظاری ندارید. اگر وکیل شما دعوت فرستاده، شماره موبایل حساب باید با پرونده یکسان باشد.</div>';
+      return;
+    }
+    box.innerHTML = items.map(i => `
+      <div class="row">
+        <div><strong>${escapeHtml(i.caseTitle || 'پرونده')}</strong> <span class="badge b-pending">در انتظار</span></div>
+        <div class="meta">شماره پرونده: ${escapeHtml(i.caseNumber || '—')} · تاریخ دعوت: ${formatDate(i.invitedAt)}</div>
+        <button type="button" class="btn btn-p btn-sm" style="margin-top:8px" onclick="acceptInvite(${i.id})">پذیرش دعوت</button>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">' + escapeHtml(e.message || 'خطا') + '</div>';
+  }
+}
+
+async function acceptInvite(accessId) {
+  try {
+    await apiPortal('/portal/client-access/' + accessId + '/accept', { method: 'POST', body: '{}' });
+    toast('دعوت پذیرفته شد');
+    await loadPendingInvites();
+    await loadPortalCases();
+  } catch (e) {
+    toast(e.message || 'خطا در پذیرش دعوت');
+  }
+}
+
+function renderPortalCaseMessages(list) {
+  const box = document.getElementById('portal-case-messages');
+  if (!box) return;
+  const items = Array.isArray(list) ? list : [];
+  box.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'پیامی نیست.';
+    box.appendChild(empty);
+    return;
+  }
+  for (const m of items) {
+    const side = m.senderRole === 'client' ? 'client' : 'lawyer';
+    const who = side === 'client' ? 'شما' : 'وکیل';
+    const wrap = document.createElement('div');
+    wrap.className = 'case-msg ' + side;
+    const bodyEl = document.createElement('div');
+    bodyEl.textContent = m.body || '';
+    const meta = document.createElement('div');
+    meta.className = 'case-msg-meta';
+    meta.textContent = `${who} · ${formatDate(m.createdAt)}`;
+    wrap.appendChild(bodyEl);
+    wrap.appendChild(meta);
+    box.appendChild(wrap);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+async function loadPortalCaseMessages(caseId) {
+  const box = document.getElementById('portal-case-messages');
+  if (!box || !TOKEN) return;
+  box.innerHTML = '<div class="empty">در حال بارگذاری…</div>';
+  try {
+    const list = await apiPortal('/portal/cases/' + caseId + '/messages');
+    renderPortalCaseMessages(list);
+  } catch (e) {
+    box.innerHTML = '<div class="empty">' + escapeHtml(e.message || 'خطا') + '</div>';
+  }
+}
+
+async function sendPortalCaseMessage(caseId) {
+  const ta = document.getElementById('portal-message-body');
+  const body = (ta?.value || '').trim();
+  if (!body) { toast('متن پیام الزامی است'); return; }
+  try {
+    await apiPortal('/portal/cases/' + caseId + '/messages', { method: 'POST', body: JSON.stringify({ body }) });
+    if (ta) ta.value = '';
+    await loadPortalCaseMessages(caseId);
+    await refreshPortalNotifUnread();
+    toast('پیام ارسال شد');
+  } catch (e) { toast(e.message || 'خطا'); }
+}
+
+const PORTAL_DOC_REQ_STATUS = {
+  pending: 'در انتظار ارسال',
+  submitted: 'در انتظار بررسی وکیل',
+  approved: 'تأیید شده ✓',
+  rejected: 'رد شده',
+  cancelled: 'این درخواست لغو شده است.'
+};
+
+function renderPortalDocRequests(list, caseId) {
+  const box = document.getElementById('portal-doc-requests');
+  if (!box) return;
+  box.replaceChildren();
+  const items = Array.isArray(list) ? list : [];
+  if (!items.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'درخواست مدرکی ندارید.';
+    box.appendChild(empty);
+    return;
+  }
+  for (const r of items) {
+    const card = document.createElement('div');
+    card.className = 'row';
+    card.style.border = '1px solid var(--border)';
+    card.style.borderRadius = '8px';
+    card.style.padding = '12px';
+    card.style.marginBottom = '10px';
+    const t = document.createElement('div');
+    t.innerHTML = '';
+    const strong = document.createElement('strong');
+    strong.textContent = r.title || '—';
+    t.appendChild(strong);
+    card.appendChild(t);
+    if (r.description) {
+      const d = document.createElement('div');
+      d.className = 'meta';
+      d.textContent = r.description;
+      card.appendChild(d);
+    }
+    const st = document.createElement('div');
+    st.className = 'meta';
+    st.textContent = 'وضعیت: ' + (PORTAL_DOC_REQ_STATUS[r.status] || r.status);
+    card.appendChild(st);
+    if (r.status === 'rejected' && r.rejectionReason) {
+      const rej = document.createElement('div');
+      rej.className = 'meta';
+      rej.style.color = 'var(--danger)';
+      rej.textContent = 'دلیل: ' + r.rejectionReason;
+      card.appendChild(rej);
+    }
+    if (r.status === 'pending') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx';
+      input.style.marginTop = '8px';
+      input.dataset.requestId = String(r.id);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-p btn-sm';
+      btn.style.marginTop = '8px';
+      btn.textContent = 'ارسال مدرک';
+      btn.onclick = () => submitPortalDocRequest(caseId, r.id, input);
+      card.appendChild(input);
+      card.appendChild(btn);
+    }
+    if (r.status === 'submitted') {
+      const ok = document.createElement('div');
+      ok.className = 'meta';
+      ok.textContent = 'مدرک با موفقیت ارسال شد و در انتظار بررسی وکیل است.';
+      card.appendChild(ok);
+    }
+    box.appendChild(card);
+  }
+}
+
+async function loadPortalDocRequests(caseId) {
+  const box = document.getElementById('portal-doc-requests');
+  if (!box || !TOKEN) return;
+  try {
+    const list = await apiPortal('/portal/cases/' + caseId + '/document-requests');
+    renderPortalDocRequests(list, caseId);
+  } catch (e) {
+    box.replaceChildren();
+    const err = document.createElement('div');
+    err.className = 'empty';
+    err.textContent = e.message || 'خطا';
+    box.appendChild(err);
+  }
+}
+
+async function submitPortalDocRequest(caseId, requestId, fileInput) {
+  const file = fileInput?.files?.[0];
+  if (!file) { toast('فایل را انتخاب کنید'); return; }
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch(API_BASE + '/portal/cases/' + caseId + '/document-requests/' + requestId + '/submit', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN },
+      body: fd
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || data.message || 'ارسال ناموفق');
+    toast('مدرک با موفقیت ارسال شد و در انتظار بررسی وکیل است.');
+    await loadPortalDocRequests(caseId);
+  } catch (e) { toast(e.message || 'خطا'); }
+}
+
+async function loadPortalCaseDocuments(caseId) {
+  const box = document.getElementById('portal-case-docs');
+  if (!box || !TOKEN) return;
+  try {
+    const list = await apiPortal('/portal/cases/' + caseId + '/documents');
+    const items = Array.isArray(list) ? list : [];
+    if (!items.length) {
+      box.innerHTML = '<div class="empty">سند به اشتراک‌گذاشته‌شده‌ای برای این پرونده نیست.</div>';
+      return;
+    }
+    box.innerHTML = items.map(d => `
+      <div class="row">
+        <div><strong>${escapeHtml(d.name || d.file_name || 'سند')}</strong></div>
+        <div class="meta">نوع: ${escapeHtml(d.file_type || '—')} · تاریخ: ${formatDate(d.sharedAt || d.date || d.uploaded_at)}</div>
+        <button type="button" class="btn btn-o btn-sm" style="margin-top:8px" onclick="downloadPortalDoc(${caseId},${d.id})">مشاهده/دانلود</button>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">' + escapeHtml(e.message || 'خطا') + '</div>';
+  }
+}
+
+async function downloadPortalDoc(caseId, documentId) {
+  if (!TOKEN) return;
+  try {
+    let r = await fetch(API_BASE + '/portal/cases/' + caseId + '/documents/' + documentId + '/download', {
+      headers: { Authorization: 'Bearer ' + TOKEN }
+    });
+    if (r.status === 401) {
+      clearSession();
+      navTo('/login?next=/portal');
+      return;
+    }
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error || err.message || 'دانلود ممکن نیست');
+    }
+    const blob = await r.blob();
+    const disp = r.headers.get('Content-Disposition') || '';
+    let fname = 'document';
+    const m = /filename\*=UTF-8''([^;]+)/i.exec(disp);
+    if (m) fname = decodeURIComponent(m[1]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    toast(e.message || 'خطا در دانلود');
+  }
+}
+
+function portalFormatMoney(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return '—';
+  return v.toLocaleString('fa-IR') + ' ریال';
+}
+
+function renderPortalCaseFinance(data) {
+  const box = document.getElementById('portal-case-finance');
+  if (!box) return;
+  box.replaceChildren();
+  const lines = [
+    ['حق‌الوکاله', portalFormatMoney(data?.agreedFee)],
+    ['پرداخت‌شده', portalFormatMoney(data?.totalPaid)],
+    ['مانده', portalFormatMoney(data?.remaining)]
+  ];
+  for (const [k, v] of lines) {
+    const div = document.createElement('div');
+    const s = document.createElement('strong');
+    s.textContent = k + ': ';
+    div.appendChild(s);
+    div.appendChild(document.createTextNode(v));
+    box.appendChild(div);
+  }
+  if (data?.overpaid) {
+    const w = document.createElement('div');
+    w.style.cssText = 'margin-top:10px;padding:10px;border-radius:8px;background:#fef2f2;color:#7f1d1d;font-size:12px;font-weight:600';
+    w.textContent = 'مبلغ پرداختی شما از حق‌الوکاله توافق‌شده بیشتر است.';
+    box.appendChild(w);
+  }
+}
+
+function renderPortalCasePayments(list) {
+  const box = document.getElementById('portal-case-payments');
+  if (!box) return;
+  box.replaceChildren();
+  const items = Array.isArray(list) ? list : [];
+  if (!items.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'پرداختی ثبت نشده.';
+    box.appendChild(empty);
+    return;
+  }
+  for (const p of items) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    const t = document.createElement('div');
+    const strong = document.createElement('strong');
+    strong.textContent = portalFormatMoney(p.amount);
+    t.appendChild(strong);
+    row.appendChild(t);
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = (p.paymentDate || '—') + (p.description ? ' · ' + p.description : '');
+    row.appendChild(meta);
+    box.appendChild(row);
+  }
+}
+
+async function loadPortalCaseFinance(caseId) {
+  try {
+    const fin = await apiPortal('/portal/cases/' + caseId + '/finance');
+    renderPortalCaseFinance(fin);
+    const pays = await apiPortal('/portal/cases/' + caseId + '/payments');
+    renderPortalCasePayments(pays);
+  } catch (e) {
+    const box = document.getElementById('portal-case-finance');
+    if (box) {
+      box.replaceChildren();
+      const err = document.createElement('div');
+      err.className = 'empty';
+      err.textContent = e.message || 'خطا';
+      box.appendChild(err);
+    }
+  }
+}
+
+async function loadPortalCases() {
+  const box = document.getElementById('cases-list');
+  if (!TOKEN) return;
+  box.innerHTML = '<div class="empty">در حال بارگذاری…</div>';
+  try {
+    const list = await apiPortal('/portal/cases');
+    const items = Array.isArray(list) ? list : [];
+    if (!items.length) {
+      box.innerHTML = '<div class="empty">پرونده فعالی ندارید. پس از پذیرش دعوت، پرونده اینجا نمایش داده می‌شود.</div>';
+      return;
+    }
+    box.innerHTML = items.map(c => `
+      <div class="row" style="cursor:pointer" onclick="openPortalCase(${c.id})">
+        <div><strong>${escapeHtml(c.title || '—')}</strong> <span class="badge b-active">فعال</span></div>
+        <div class="meta">شماره: ${escapeHtml(c.num || '—')} · وضعیت: ${escapeHtml(c.status || '—')}</div>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">' + escapeHtml(e.message || 'خطا') + '</div>';
+  }
+}
+
+function hideCaseDetail() {
+  document.getElementById('case-detail-card').style.display = 'none';
+  document.getElementById('cases-list-card').style.display = '';
+}
+
+async function openPortalCase(id) {
+  try {
+    const c = await apiPortal('/portal/cases/' + id);
+    document.getElementById('cases-list-card').style.display = 'none';
+    document.getElementById('case-detail-card').style.display = '';
+    document.getElementById('case-detail-title').textContent = c.title || 'جزئیات پرونده';
+    document.getElementById('case-detail-body').innerHTML = `
+      <div class="meta" style="font-size:14px;line-height:2">
+        <div><strong>شماره پرونده:</strong> ${escapeHtml(c.num || '—')}</div>
+        <div><strong>وضعیت:</strong> ${escapeHtml(c.status || '—')}</div>
+        <div><strong>شعبه:</strong> ${escapeHtml(c.branch || '—')}</div>
+        <div><strong>تاریخ ایجاد:</strong> ${formatDate(c.createdAt)}</div>
+        <div><strong>آخرین بروزرسانی:</strong> ${formatDate(c.updatedAt)}</div>
+        ${c.description ? `<div style="margin-top:10px"><strong>شرح:</strong><br>${escapeHtml(c.description)}</div>` : ''}
+      </div>
+      <div style="margin-top:18px">
+        <div class="card-hd" style="margin-bottom:8px"><div class="card-title">وضعیت مالی پرونده</div></div>
+        <div id="portal-case-finance" class="meta" style="font-size:14px;line-height:2"></div>
+        <div class="card-title" style="font-size:13px;margin:12px 0 8px">سوابق پرداخت</div>
+        <div id="portal-case-payments"></div>
+      </div>
+      <div style="margin-top:18px">
+        <div class="card-hd" style="margin-bottom:8px"><div class="card-title">اسناد پرونده</div></div>
+        <div id="portal-case-docs"><div class="empty">در حال بارگذاری…</div></div>
+      </div>
+      <div style="margin-top:18px">
+        <div class="card-hd" style="margin-bottom:8px"><div class="card-title">مدارک موردنیاز</div></div>
+        <div id="portal-doc-requests"><div class="empty">در حال بارگذاری…</div></div>
+      </div>
+      <div style="margin-top:18px">
+        <div class="card-hd" style="margin-bottom:8px"><div class="card-title">پیام‌های پرونده</div>
+          <button type="button" class="btn btn-o btn-sm" onclick="loadPortalCaseMessages(${id})">بروزرسانی</button></div>
+        <div id="portal-case-messages" class="case-msg-list"><div class="empty">در حال بارگذاری…</div></div>
+        <textarea class="fc" id="portal-message-body" rows="3" maxlength="5000" placeholder="پیام برای وکیل…" style="margin-top:8px"></textarea>
+        <button type="button" class="btn btn-p btn-sm" style="margin-top:8px;width:100%" onclick="sendPortalCaseMessage(${id})">ارسال پیام</button>
+      </div>`;
+    await loadPortalCaseFinance(id);
+    await loadPortalCaseDocuments(id);
+    await loadPortalDocRequests(id);
+    await loadPortalCaseMessages(id);
+  } catch (e) {
+    toast(e.message || 'دسترسی به پرونده ممکن نیست');
+  }
+}
+
+async function validateClientSession() {
+  if (!TOKEN) return false;
+  try {
+    const r = await fetch(API_BASE + '/me', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    if (r.status === 401) return false;
+    if (!r.ok) return false;
+    const me = await r.json().catch(() => null);
+    if (!me || me.role !== 'client') return false;
+    CURRENT_USER = me;
+    localStorage.setItem('legal_user', JSON.stringify(me));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function bootstrapPortal() {
+  const p = new URLSearchParams(location.search);
+  if (p.get('invite')) sessionStorage.setItem('portal_invite_token', p.get('invite'));
+
+  if (TOKEN && CURRENT_USER) {
+    if (CURRENT_USER.role === 'lawyer') {
+      navTo('/');
+      return;
+    }
+    if (CURRENT_USER.role === 'admin') {
+      navTo('/admin');
+      return;
+    }
+    if (CURRENT_USER.role === 'client') {
+      const ok = await validateClientSession();
+      if (!ok) {
+        clearSession();
+        if (location.hash === '#register' || p.get('register') === '1') {
+          document.getElementById('auth-gate').style.display = '';
+          setAuthTab('register');
+          return;
+        }
+        navTo('/login?next=/portal');
+        return;
+      }
+      showApp();
+      return;
+    }
+  }
+  if (location.hash === '#register' || p.get('register') === '1') {
+    document.getElementById('auth-gate').style.display = '';
+    setAuthTab('register');
+    return;
+  }
+  navTo('/login?next=/portal');
+}
+bootstrapPortal();
+</script>
+</body>
+</html>

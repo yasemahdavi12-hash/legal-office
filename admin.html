@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a1a2e">
+<title>پنل مدیریت | قانون در جیب شما</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#0f2540;--pl:#1e4a7a;--accent:#b8860b;--bg:#eef2f6;
+  --sidebar:#071422;--text:#1a2332;--muted:#64748b;--border:#d8e0ea;
+  --success:#15803d;--warn:#b45309;--danger:#b91c1c;
+  --shadow:0 1px 3px rgba(15,37,64,.08),0 4px 16px rgba(15,37,64,.04);--r:10px;
+  --font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+button,input,select{font-family:inherit;outline:none}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--pl);outline-offset:2px}
+
+.login-gate{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:linear-gradient(160deg,#071422,#0f2540 50%,#1e4a7a);
+}
+.login-box{background:#fff;border-radius:14px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.login-box h1{font-size:18px;color:var(--primary);margin-bottom:4px;text-align:center}
+.login-box p{font-size:12px;color:var(--muted);text-align:center;margin-bottom:22px}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:12px;font-weight:600;margin-bottom:5px}
+.fc{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px}
+.fc:focus{border-color:var(--pl);box-shadow:0 0 0 3px rgba(30,74,122,.18)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;border:none}
+.btn-p{background:var(--pl);color:#fff;width:100%;padding:12px}
+.btn-p:hover{background:var(--primary)}
+.btn-o{background:#fff;border:1.5px solid var(--border);color:var(--text)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-d{background:var(--danger);color:#fff}
+.hint{font-size:11px;color:var(--muted);text-align:center;margin-top:12px}
+.err{background:#fef2f2;color:#7f1d1d;padding:10px;border-radius:8px;font-size:12px;margin-bottom:12px;display:none;border-right:3px solid var(--danger)}
+.err.show{display:block}
+
+.layout{display:none;min-height:100vh}
+.layout.show{display:flex}
+.sidebar{width:240px;background:var(--sidebar);color:#fff;display:flex;flex-direction:column;position:fixed;right:0;top:0;bottom:0;z-index:50}
+.s-brand{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.s-brand h2{font-size:14px;font-weight:700}
+.s-brand p{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px}
+.s-nav{padding:12px 10px;flex:1}
+.nav-btn{display:flex;width:100%;gap:8px;align-items:center;padding:10px 12px;border:none;background:none;color:rgba(255,255,255,.65);border-radius:8px;font-size:13px;text-align:right;margin-bottom:2px}
+.nav-btn:hover,.nav-btn.active{background:var(--pl);color:#fff}
+.main{margin-right:240px;flex:1;min-width:0}
+.topbar{background:#fff;padding:12px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:40}
+.tb-title{font-size:16px;font-weight:700;color:var(--primary)}
+.content{padding:20px}
+.menu-btn{display:none;border:none;background:none;font-size:22px;color:var(--primary)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);border-right:3px solid var(--pl)}
+.stat.g{border-right-color:var(--success)}.stat.w{border-right-color:var(--warn)}.stat.a{border-right-color:var(--accent)}
+.stat .n{font-size:26px;font-weight:800;line-height:1}
+.stat .l{font-size:11px;color:var(--muted);margin-top:4px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+.card-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.card-title{font-size:14px;font-weight:700;color:var(--primary)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.page{display:none}.page.active{display:block}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f7fafc;padding:10px 12px;text-align:right;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-on{background:#dcfce7;color:#166534}.b-off{background:#f1f5f9;color:#475569}.b-admin{background:#e0f2fe;color:#075985}
+.empty{text-align:center;padding:28px;color:var(--muted);font-size:13px}
+.overlay{position:fixed;inset:0;background:rgba(7,20,34,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:480px;max-height:90vh;overflow:auto}
+.mh{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-weight:700;color:var(--primary)}
+.mb{padding:16px}.mf{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.mc{border:none;background:var(--bg);width:30px;height:30px;border-radius:8px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--primary);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:200;transition:transform .25s;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.side-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:45}
+
+@media(max-width:900px){
+  .stats{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+}
+@media(max-width:720px){
+  .sidebar{transform:translateX(110%);transition:transform .28s}
+  .sidebar.open{transform:translateX(0)}
+  .side-overlay.open{display:block}
+  .main{margin-right:0}
+  .menu-btn{display:block}
+  .content{padding:14px 12px 24px}
+  .stats{grid-template-columns:1fr 1fr;gap:10px}
+  .stat .n{font-size:22px}
+  .modal{border-radius:14px 14px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%}
+  .overlay{align-items:flex-end;padding:0}
+}
+</style>
+</head>
+<body>
+
+<div class="login-gate" id="login-gate">
+  <div class="login-box">
+    <h1>پنل مدیریت</h1>
+    <p>قانون در جیب شما — دسترسی مدیر سیستم</p>
+    <div class="err" id="login-err"></div>
+    <div id="adm-login-step">
+      <div class="fg"><label class="fl" for="adm-email">ایمیل</label><input class="fc" id="adm-email" type="email" placeholder="admin@example.com"></div>
+      <div class="fg"><label class="fl" for="adm-pass">رمز عبور</label><input class="fc" id="adm-pass" type="password" placeholder="رمز عبور" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+      <button type="button" class="btn btn-p" onclick="adminLogin()">ورود مدیر</button>
+      <button type="button" class="btn btn-o" style="width:100%;margin-top:10px;padding:11px" onclick="enterAdminPreview()">پیش‌نمایش UI پنل</button>
+    </div>
+    <div id="adm-mfa-step" style="display:none">
+      <p style="margin-bottom:14px">کد تأیید دو مرحله‌ای را وارد کنید</p>
+      <div class="fg"><label class="fl" for="adm-mfa-code">کد ۶ رقمی یا کد بازیابی</label><input class="fc" id="adm-mfa-code" inputmode="text" autocomplete="one-time-code" placeholder="123456" onkeydown="if(event.key==='Enter')adminVerifyMfa()"></div>
+      <button type="button" class="btn btn-p" onclick="adminVerifyMfa()">تأیید MFA</button>
+      <button type="button" class="btn btn-o" style="width:100%;margin-top:10px;padding:11px" onclick="adminCancelMfa()">بازگشت</button>
+    </div>
+    <div id="adm-mfa-setup-step" style="display:none">
+      <p style="margin-bottom:14px">فعال‌سازی MFA برای مدیر الزامی است</p>
+      <div class="fg"><label class="fl">کلید secret</label><input class="fc" id="adm-mfa-secret" readonly></div>
+      <div class="fg"><label class="fl">otpauth URL</label><input class="fc" id="adm-mfa-otpauth" readonly></div>
+      <div class="fg"><label class="fl">کدهای بازیابی (یک‌بار نمایش)</label><textarea class="fc" id="adm-mfa-recovery" rows="4" readonly style="resize:vertical;font-size:11px"></textarea></div>
+      <div class="fg"><label class="fl" for="adm-mfa-enable-code">کد ۶ رقمی اپ احراز هویت</label><input class="fc" id="adm-mfa-enable-code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" onkeydown="if(event.key==='Enter')adminEnableMfa()"></div>
+      <button type="button" class="btn btn-p" onclick="adminEnableMfa()">فعال‌سازی و ادامه</button>
+      <button type="button" class="btn btn-o" style="width:100%;margin-top:10px;padding:11px" onclick="adminCancelMfa()">انصراف</button>
+    </div>
+    <p class="hint">این صفحه از اپ اصلی جداست. مسیر: /admin</p>
+    <p class="hint"><a href="/" style="color:var(--pl)">بازگشت به سامانه وکیل</a></p>
+  </div>
+</div>
+
+<div class="side-overlay" id="side-overlay" onclick="closeAdminSidebar()"></div>
+<div class="layout" id="admin-layout">
+  <aside class="sidebar" id="admin-sidebar">
+    <div class="s-brand">
+      <h2>قانون در جیب شما</h2>
+      <p>پنل مدیریت سیستم</p>
+    </div>
+    <nav class="s-nav">
+      <button type="button" class="nav-btn active" onclick="showAdminPage('dash',this)">داشبورد آماری</button>
+      <button type="button" class="nav-btn" onclick="showAdminPage('users',this)">مدیریت کاربران</button>
+      <button type="button" class="nav-btn" onclick="showAdminPage('overview',this)">نمای کلی پرونده‌ها</button>
+      <button type="button" class="nav-btn" onclick="adminLogout()" style="color:#fca5a5;margin-top:16px">خروج</button>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button type="button" class="menu-btn" onclick="toggleAdminSidebar()" aria-label="منو">☰</button>
+        <div class="tb-title" id="admin-title">داشبورد آماری</div>
+      </div>
+      <a class="btn btn-o btn-sm" href="/">سامانه وکیل</a>
+    </header>
+    <div class="content">
+
+      <section class="page active" id="apage-dash">
+        <div class="stats">
+          <div class="stat"><div class="n" id="a-cases">—</div><div class="l">تعداد پرونده‌ها</div></div>
+          <div class="stat g"><div class="n" id="a-clients">—</div><div class="l">تعداد موکلین</div></div>
+          <div class="stat w"><div class="n" id="a-tasks">—</div><div class="l">وظایف امروز</div></div>
+          <div class="stat a"><div class="n" id="a-events">—</div><div class="l">جلسات نزدیک</div></div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">خلاصه وضعیت سیستم</div></div>
+            <div id="a-summary" class="empty">پس از اتصال Backend، آمار واقعی نمایش داده می‌شود.</div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">جلسات نزدیک</div></div>
+            <div id="a-upcoming" class="empty">جلسه‌ای برای نمایش نیست.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="apage-users">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">مدیریت کاربران</div>
+            <button type="button" class="btn btn-p btn-sm" onclick="openUserModal()">افزودن کاربر</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>نام</th><th>ایمیل</th><th>نقش</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+              <tbody id="users-tbody">
+                <tr><td colspan="5"><div class="empty">کاربری بارگذاری نشده — UI آماده اتصال به API کاربران است.</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="apage-overview">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">نمای کلی پرونده‌ها</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>شماره</th><th>عنوان</th><th>وضعیت</th><th>آخرین بروزرسانی</th></tr></thead>
+              <tbody id="cases-overview">
+                <tr><td colspan="4"><div class="empty">داده‌ای موجود نیست.</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-user">
+  <div class="modal">
+    <div class="mh">افزودن کاربر <button type="button" class="mc" onclick="closeUserModal()">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl" for="u-name">نام</label><input class="fc" id="u-name" placeholder="نام کامل"></div>
+      <div class="fg"><label class="fl" for="u-email">ایمیل</label><input class="fc" id="u-email" type="email" placeholder="email@example.com"></div>
+      <div class="fg"><label class="fl" for="u-role">نقش</label>
+        <select class="fc" id="u-role">
+          <option value="lawyer">وکیل</option>
+          <option value="admin">مدیر</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl" for="u-pass">رمز موقت</label><input class="fc" id="u-pass" type="password" placeholder="رمز موقت"></div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-o" onclick="closeUserModal()">انصراف</button>
+      <button type="button" class="btn btn-p" style="width:auto" onclick="submitUser()">ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const API_BASE = `${location.origin}/api`;
+
+let TOKEN = localStorage.getItem('legal_admin_token') || '';
+let REFRESH = localStorage.getItem('legal_admin_refresh') || '';
+let USER = null;
+try { USER = JSON.parse(localStorage.getItem('legal_admin_user') || 'null'); } catch { USER = null; }
+let PREVIEW = false;
+let usersStore = [];
+/** Memory-only MFA challenge / setup tokens — never persist to localStorage */
+let pendingMfaToken = null;
+let pendingSetupToken = null;
+let pendingLoginEmail = '';
+let pendingLoginPass = '';
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function headers() {
+  const h = { 'Content-Type': 'application/json' };
+  if (TOKEN) h.Authorization = 'Bearer ' + TOKEN;
+  return h;
+}
+async function adminApi(path, options = {}) {
+  const r = await fetch(API_BASE + path, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'خطای API');
+  return data;
+}
+function clearLoginErr() {
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  err.classList.remove('show');
+}
+function showLoginErr(msg) {
+  const err = document.getElementById('login-err');
+  err.textContent = msg || 'خطا';
+  err.classList.add('show');
+}
+function setAdminLoginStep(step) {
+  document.getElementById('adm-login-step').style.display = step === 'login' ? 'block' : 'none';
+  document.getElementById('adm-mfa-step').style.display = step === 'mfa' ? 'block' : 'none';
+  document.getElementById('adm-mfa-setup-step').style.display = step === 'setup' ? 'block' : 'none';
+}
+function clearPendingMfa() {
+  pendingMfaToken = null;
+  pendingSetupToken = null;
+  pendingLoginEmail = '';
+  pendingLoginPass = '';
+  const codeEl = document.getElementById('adm-mfa-code');
+  const enableEl = document.getElementById('adm-mfa-enable-code');
+  if (codeEl) codeEl.value = '';
+  if (enableEl) enableEl.value = '';
+}
+function persistAdmin(data) {
+  const access = data.accessToken || data.token || '';
+  if (!access) return false;
+  TOKEN = access;
+  REFRESH = data.refreshToken || '';
+  USER = data.user;
+  localStorage.setItem('legal_admin_token', TOKEN);
+  if (REFRESH) localStorage.setItem('legal_admin_refresh', REFRESH);
+  else localStorage.removeItem('legal_admin_refresh');
+  if (USER) localStorage.setItem('legal_admin_user', JSON.stringify(USER));
+  localStorage.setItem('legal_token', TOKEN);
+  if (REFRESH) localStorage.setItem('legal_refresh', REFRESH);
+  else localStorage.removeItem('legal_refresh');
+  if (USER) localStorage.setItem('legal_user', JSON.stringify(USER));
+  return true;
+}
+async function showAdmin() {
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('admin-layout').classList.add('show');
+  await loadAdminData();
+}
+function enterAdminPreview() {
+  PREVIEW = true;
+  USER = { name: 'مدیر (پیش‌نمایش)', role: 'admin' };
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('admin-layout').classList.add('show');
+  renderAdminDash(null);
+  renderUsers();
+  toast('پیش‌نمایش UI پنل مدیریت');
+}
+function adminCancelMfa() {
+  clearPendingMfa();
+  clearLoginErr();
+  setAdminLoginStep('login');
+}
+async function adminStartMfaSetup(setupToken) {
+  pendingSetupToken = setupToken;
+  pendingMfaToken = null;
+  const r = await fetch(API_BASE + '/mfa/setup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + setupToken }
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'خطا در راه‌اندازی MFA');
+  document.getElementById('adm-mfa-secret').value = data.secret || '';
+  document.getElementById('adm-mfa-otpauth').value = data.otpauthUrl || '';
+  document.getElementById('adm-mfa-recovery').value = (data.recoveryCodes || []).join('\n');
+  setAdminLoginStep('setup');
+}
+async function adminEnableMfa() {
+  clearLoginErr();
+  const code = document.getElementById('adm-mfa-enable-code').value.trim();
+  if (!code || !pendingSetupToken) { showLoginErr('کد MFA الزامی است'); return; }
+  try {
+    const r = await fetch(API_BASE + '/mfa/enable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + pendingSetupToken },
+      body: JSON.stringify({ code })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'کد MFA نامعتبر است');
+    pendingSetupToken = null;
+    const login = await fetch(API_BASE + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingLoginEmail, password: pendingLoginPass })
+    });
+    const loginData = await login.json().catch(() => ({}));
+    if (!login.ok) throw new Error(loginData.error || 'ورود پس از فعال‌سازی MFA ناموفق بود');
+    if (loginData.mfaRequired && loginData.mfaToken) {
+      pendingMfaToken = loginData.mfaToken;
+      setAdminLoginStep('mfa');
+      toast('MFA فعال شد — کد تأیید را وارد کنید');
+      return;
+    }
+    if (!persistAdmin(loginData)) throw new Error('توکن ورود دریافت نشد');
+    clearPendingMfa();
+    PREVIEW = false;
+    await showAdmin();
+  } catch (e) {
+    showLoginErr(e.message || 'خطا در فعال‌سازی MFA');
+  }
+}
+async function adminVerifyMfa() {
+  clearLoginErr();
+  const code = document.getElementById('adm-mfa-code').value.trim();
+  if (!code) { showLoginErr('کد تأیید الزامی است'); return; }
+  if (!pendingMfaToken) { showLoginErr('نشست MFA منقضی شده است. دوباره وارد شوید.'); setAdminLoginStep('login'); return; }
+  try {
+    const r = await fetch(API_BASE + '/mfa/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mfaToken: pendingMfaToken, code })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'کد MFA نامعتبر است');
+    if (!persistAdmin(data)) throw new Error('توکن ورود دریافت نشد');
+    clearPendingMfa();
+    PREVIEW = false;
+    await showAdmin();
+  } catch (e) {
+    showLoginErr(e.message || 'کد MFA نامعتبر است');
+  }
+}
+async function adminLogin() {
+  const email = document.getElementById('adm-email').value.trim();
+  const pass = document.getElementById('adm-pass').value;
+  clearLoginErr();
+  if (!email || !pass) { showLoginErr('ایمیل و رمز الزامی است'); return; }
+  try {
+    const r = await fetch(API_BASE + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'خطا در ورود');
+    if (data.user && data.user.role && data.user.role !== 'admin') {
+      if (data.user.role === 'client') {
+        window.location.replace('/portal');
+      } else {
+        window.location.replace('/');
+      }
+      return;
+    }
+    pendingLoginEmail = email;
+    pendingLoginPass = pass;
+    if (data.mfaSetupRequired && data.setupToken) {
+      await adminStartMfaSetup(data.setupToken);
+      return;
+    }
+    if (data.mfaRequired && data.mfaToken) {
+      pendingMfaToken = data.mfaToken;
+      pendingSetupToken = null;
+      setAdminLoginStep('mfa');
+      return;
+    }
+    if (!persistAdmin(data)) {
+      showLoginErr('توکن ورود دریافت نشد');
+      return;
+    }
+    clearPendingMfa();
+    PREVIEW = false;
+    await showAdmin();
+  } catch (e) {
+    showLoginErr(e.message || 'Backend در دسترس نیست. از پیش‌نمایش UI استفاده کنید.');
+  }
+}
+function adminLogout() {
+  if (TOKEN && !PREVIEW) {
+    fetch(API_BASE + '/logout', { method: 'POST', headers: headers(), body: JSON.stringify({ refreshToken: REFRESH }) }).catch(() => {});
+  }
+  TOKEN = ''; REFRESH = ''; USER = null; PREVIEW = false; usersStore = [];
+  clearPendingMfa();
+  localStorage.removeItem('legal_admin_token');
+  localStorage.removeItem('legal_admin_refresh');
+  localStorage.removeItem('legal_admin_user');
+  localStorage.removeItem('legal_token');
+  localStorage.removeItem('legal_refresh');
+  localStorage.removeItem('legal_user');
+  navTo('/login?next=/admin');
+}
+function showAdminPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('apage-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const titles = { dash: 'داشبورد آماری', users: 'مدیریت کاربران', overview: 'نمای کلی پرونده‌ها' };
+  document.getElementById('admin-title').textContent = titles[id] || id;
+  closeAdminSidebar();
+  if (id === 'overview' && !PREVIEW) loadCasesOverview();
+}
+function toggleAdminSidebar() {
+  document.getElementById('admin-sidebar').classList.toggle('open');
+  document.getElementById('side-overlay').classList.toggle('open');
+}
+function closeAdminSidebar() {
+  document.getElementById('admin-sidebar').classList.remove('open');
+  document.getElementById('side-overlay').classList.remove('open');
+}
+async function loadAdminData() {
+  if (PREVIEW || !TOKEN) return;
+  try {
+    const [dash, users] = await Promise.all([
+      adminApi('/admin/dashboard'),
+      adminApi('/admin/users')
+    ]);
+    usersStore = users || [];
+    renderAdminDash(dash);
+    renderUsers();
+  } catch (e) {
+    toast(e.message || 'خطا در بارگذاری داده ادمین');
+  }
+}
+function renderAdminDash(dash) {
+  document.getElementById('a-cases').textContent = dash ? dash.totals.cases : '—';
+  document.getElementById('a-clients').textContent = dash ? dash.totals.clients : '—';
+  document.getElementById('a-tasks').textContent = dash ? dash.totals.tasks_today : '—';
+  document.getElementById('a-events').textContent = dash ? dash.totals.upcoming_events : '—';
+  if (!dash) {
+    document.getElementById('a-summary').innerHTML = '<div class="empty">در انتظار داده از Backend</div>';
+    document.getElementById('a-upcoming').innerHTML = '<div class="empty">جلسه‌ای برای نمایش نیست.</div>';
+    return;
+  }
+  const statusHtml = Object.entries(dash.cases_by_status || {}).map(([k, v]) =>
+    `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${k}</span><strong>${v}</strong></div>`
+  ).join('') || '<div class="empty">بدون پرونده</div>';
+  document.getElementById('a-summary').innerHTML = statusHtml;
+  document.getElementById('a-upcoming').innerHTML = (dash.upcoming_events || []).length
+    ? dash.upcoming_events.map(e => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><strong>${e.title || ''}</strong><div style="color:var(--muted);font-size:11px">${e.date || ''} ${e.time || ''}</div></div>`).join('')
+    : '<div class="empty">جلسه‌ای نزدیک نیست.</div>';
+}
+function renderUsers() {
+  const tb = document.getElementById('users-tbody');
+  if (!usersStore.length) {
+    tb.innerHTML = `<tr><td colspan="5"><div class="empty">کاربری ثبت نشده.</div></td></tr>`;
+    return;
+  }
+  tb.innerHTML = usersStore.map(u => `
+    <tr>
+      <td>${u.name}</td><td>${u.email}</td>
+      <td><span class="badge ${u.role === 'admin' ? 'b-admin' : 'b-on'}">${roleLabel(u.role)}</span></td>
+      <td><span class="badge b-on">فعال</span></td>
+      <td>
+        <button type="button" class="btn btn-o btn-sm" onclick="editUser(${u.id})">ویرایش نقش</button>
+        <button type="button" class="btn btn-d btn-sm" onclick="removeUser(${u.id})">حذف</button>
+      </td>
+    </tr>`).join('');
+}
+function roleLabel(r) {
+  return ({ lawyer:'وکیل', admin:'مدیر' })[r] || r;
+}
+function openUserModal() { document.getElementById('modal-user').classList.add('open'); }
+function closeUserModal() { document.getElementById('modal-user').classList.remove('open'); }
+async function submitUser() {
+  const name = document.getElementById('u-name').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const role = document.getElementById('u-role').value;
+  const password = document.getElementById('u-pass').value;
+  if (!name || !email || !password) { toast('نام، ایمیل و رمز الزامی است'); return; }
+  if (PREVIEW || !TOKEN) { toast('ثبت کاربر پس از ورود واقعی فعال است'); return; }
+  try {
+    await adminApi('/admin/users', { method: 'POST', body: JSON.stringify({ name, email, role, password }) });
+    closeUserModal();
+    toast('کاربر ایجاد شد');
+    await loadAdminData();
+  } catch (e) { toast(e.message); }
+}
+async function editUser(id) {
+  const role = prompt('نقش جدید (admin/lawyer):');
+  if (!role) return;
+  if (!['admin', 'lawyer'].includes(String(role).trim())) {
+    toast('نقش فقط admin یا lawyer مجاز است');
+    return;
+  }
+  try {
+    await adminApi('/admin/users/' + id, { method: 'PUT', body: JSON.stringify({ role }) });
+    toast('نقش به‌روز شد');
+    await loadAdminData();
+  } catch (e) { toast(e.message); }
+}
+async function removeUser(id) {
+  if (!confirm('حذف کاربر؟')) return;
+  try {
+    await adminApi('/admin/users/' + id, { method: 'DELETE' });
+    toast('کاربر حذف شد');
+    await loadAdminData();
+  } catch (e) { toast(e.message); }
+}
+async function loadCasesOverview() {
+  try {
+    const cases = await adminApi('/cases');
+    const tb = document.getElementById('cases-overview');
+    if (!cases.length) {
+      tb.innerHTML = `<tr><td colspan="4"><div class="empty">داده‌ای موجود نیست.</div></td></tr>`;
+      return;
+    }
+    tb.innerHTML = cases.map(c => `
+      <tr>
+        <td>${c.case_number || c.num || ''}</td>
+        <td>${c.title || ''}</td>
+        <td>${c.status || ''}</td>
+        <td>${c.updated_at || c.updatedAt || ''}</td>
+      </tr>`).join('');
+  } catch (e) { toast(e.message); }
+}
+
+document.getElementById('modal-user').addEventListener('click', e => {
+  if (e.target.id === 'modal-user') closeUserModal();
+});
+
+function normPath(pathname) {
+  const p = (pathname || '/').replace(/\/index\.html$/i, '') || '/';
+  return p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p;
+}
+function navTo(url) {
+  try {
+    const target = normPath(new URL(url, location.origin).pathname);
+    if (target === normPath(location.pathname)) return;
+  } catch { /* ignore */ }
+  window.location.replace(url);
+}
+async function validateAdminSession(token) {
+  if (!token) return false;
+  try {
+    const r = await fetch(API_BASE + '/me', { headers: { Authorization: 'Bearer ' + token } });
+    if (r.status === 401) return false;
+    if (!r.ok) return false;
+    const me = await r.json().catch(() => null);
+    return me && me.role === 'admin';
+  } catch {
+    return false;
+  }
+}
+
+async function bootstrapAdminFromSharedAuth() {
+  if (TOKEN && USER?.role === 'admin') {
+    const ok = await validateAdminSession(TOKEN);
+    if (ok) {
+      showAdmin();
+      return;
+    }
+    TOKEN = ''; REFRESH = ''; USER = null;
+    localStorage.removeItem('legal_admin_token');
+    localStorage.removeItem('legal_admin_refresh');
+    localStorage.removeItem('legal_admin_user');
+    localStorage.removeItem('legal_token');
+    localStorage.removeItem('legal_refresh');
+    localStorage.removeItem('legal_user');
+  }
+  let sharedToken = localStorage.getItem('legal_token');
+  let sharedUser = null;
+  try { sharedUser = JSON.parse(localStorage.getItem('legal_user') || 'null'); } catch { sharedUser = null; }
+  if (sharedToken && sharedUser?.role === 'admin') {
+    const ok = await validateAdminSession(sharedToken);
+    if (ok) {
+      persistAdmin({
+        accessToken: sharedToken,
+        refreshToken: localStorage.getItem('legal_refresh') || '',
+        user: sharedUser
+      });
+      showAdmin();
+      return;
+    }
+    localStorage.removeItem('legal_token');
+    localStorage.removeItem('legal_refresh');
+    localStorage.removeItem('legal_user');
+  }
+  if (sharedToken && sharedUser?.role === 'client') {
+    navTo('/portal');
+    return;
+  }
+  if (sharedToken && sharedUser?.role === 'lawyer') {
+    navTo('/');
+    return;
+  }
+  navTo('/login?next=/admin');
+}
+bootstrapAdminFromSharedAuth();
+</script>
+</body>
+</html>

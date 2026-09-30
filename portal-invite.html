@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f2540">
+<title>دعوت موکل | قانون در جیب شما</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#0f2540;--pl:#1e4a7a;--text:#1a2332;--muted:#64748b;--border:#d8e0ea;--danger:#b91c1c;--success:#15803d;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{font-family:var(--font);background:linear-gradient(160deg,#071422,#0f2540 55%,#1e4a7a);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;color:var(--text)}
+button{font-family:inherit;cursor:pointer;outline:none}
+.box{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 50px rgba(0,0,0,.28)}
+h1{font-size:18px;color:var(--primary);text-align:center;margin-bottom:8px}
+p.msg{font-size:13px;line-height:1.9;color:var(--text);text-align:center;margin-bottom:18px}
+p.sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;padding:11px;border-radius:8px;font-size:13px;font-weight:600;border:none;margin-top:8px}
+.btn-p{background:var(--pl);color:#fff}
+.btn-o{background:#fff;border:1.5px solid var(--border);color:var(--text)}
+.status-ok{color:var(--success);font-weight:700}
+.status-bad{color:var(--danger);font-weight:700}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>دعوت به پورتال موکل</h1>
+  <p class="sub">قانون در جیب شما</p>
+  <p class="msg" id="msg">در حال بررسی لینک دعوت…</p>
+  <div id="actions-valid" class="hidden">
+    <button type="button" class="btn btn-p" id="btn-login">ورود موکل</button>
+    <button type="button" class="btn btn-o" id="btn-register">ثبت‌نام موکل</button>
+  </div>
+  <div id="actions-accept" class="hidden">
+    <button type="button" class="btn btn-p" id="btn-accept">پذیرش دعوت</button>
+  </div>
+  <div id="actions-done" class="hidden">
+    <button type="button" class="btn btn-p" id="btn-portal">رفتن به پورتال</button>
+  </div>
+</div>
+<script>
+const API_BASE = location.origin + '/api';
+
+function getTokenFromPath() {
+  const parts = location.pathname.split('/').filter(Boolean);
+  const i = parts.indexOf('invite');
+  if (i >= 0 && parts[i + 1]) return decodeURIComponent(parts[i + 1]);
+  return '';
+}
+
+const INVITE_TOKEN = getTokenFromPath();
+if (INVITE_TOKEN) sessionStorage.setItem('portal_invite_token', INVITE_TOKEN);
+
+function authHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  const t = localStorage.getItem('legal_token');
+  if (t) h.Authorization = 'Bearer ' + t;
+  return h;
+}
+
+function currentUser() {
+  try { return JSON.parse(localStorage.getItem('legal_user') || 'null'); } catch { return null; }
+}
+
+async function loadStatus() {
+  const msg = document.getElementById('msg');
+  if (!INVITE_TOKEN) {
+    msg.innerHTML = '<span class="status-bad">لینک دعوت نامعتبر است.</span>';
+    return;
+  }
+  try {
+    const r = await fetch(API_BASE + '/portal/invite/' + encodeURIComponent(INVITE_TOKEN));
+    const body = await r.json().catch(() => ({}));
+    const status = body.status || 'invalid';
+    const message = body.message || 'لینک دعوت نامعتبر است.';
+    if (status === 'valid') {
+      msg.innerHTML = '<span class="status-ok">' + message + '</span>';
+      document.getElementById('actions-valid').classList.remove('hidden');
+      const u = currentUser();
+      const t = localStorage.getItem('legal_token');
+      if (t && u && u.role === 'client') {
+        document.getElementById('actions-accept').classList.remove('hidden');
+      }
+      return;
+    }
+    msg.innerHTML = '<span class="status-bad">' + message + '</span>';
+  } catch {
+    msg.innerHTML = '<span class="status-bad">خطا در بررسی دعوت. بعداً دوباره تلاش کنید.</span>';
+  }
+}
+
+async function acceptInvite() {
+  const msg = document.getElementById('msg');
+  try {
+    const r = await fetch(API_BASE + '/portal/invite/' + encodeURIComponent(INVITE_TOKEN) + '/accept', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: '{}'
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'پذیرش دعوت ناموفق بود');
+    sessionStorage.removeItem('portal_invite_token');
+    msg.innerHTML = '<span class="status-ok">دعوت با موفقیت پذیرفته شد.</span>';
+    document.getElementById('actions-valid').classList.add('hidden');
+    document.getElementById('actions-accept').classList.add('hidden');
+    document.getElementById('actions-done').classList.remove('hidden');
+  } catch (e) {
+    msg.innerHTML = '<span class="status-bad">' + (e.message || 'خطا') + '</span>';
+  }
+}
+
+document.getElementById('btn-login').onclick = () => {
+  location.href = '/login?invite=' + encodeURIComponent(INVITE_TOKEN) + '&next=/portal';
+};
+document.getElementById('btn-register').onclick = () => {
+  location.href = '/portal?register=1&invite=' + encodeURIComponent(INVITE_TOKEN);
+};
+document.getElementById('btn-accept').onclick = acceptInvite;
+document.getElementById('btn-portal').onclick = () => { location.href = '/portal'; };
+
+loadStatus();
+</script>
+</body>
+</html>

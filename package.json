@@ -1,18 +1,41 @@
 {
   "name": "legal-app",
-  "version": "1.0.0",
-  "description": "سامانه مدیریت دفتر حقوقی",
+  "version": "2.0.0",
+  "description": "قانون در جیب شما — سامانه مدیریت پرونده حقوقی",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "migrate": "npx knex migrate:latest",
+    "migrate:rollback": "npx knex migrate:rollback",
+    "migrate:production": "npx knex migrate:latest --env production",
+    "seed": "npx knex seed:run",
+    "seed:admin": "npx knex seed:run --specific=001_admin.js",
+    "seed:production": "npx knex seed:run --env production",
+    "backup": "node scripts/backup.js",
+    "test": "node -r dotenv/config scripts/test-security-regression.js && node -r dotenv/config scripts/test-security-hardening.js && node -r dotenv/config scripts/test-production-hardening.js",
+    "test:security": "node -r dotenv/config scripts/test-security-regression.js",
+    "test:hardening": "node -r dotenv/config scripts/test-security-hardening.js",
+    "test:production": "node -r dotenv/config scripts/test-production-hardening.js",
+    "test:mysql:migrate": "node -r dotenv/config scripts/test-mysql-migrate.js",
+    "test:mysql:crud": "node -r dotenv/config scripts/test-mysql-crud.js",
+    "ci:production-deps": "npm ci --omit=optional"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "lowdb": "^1.0.0",
-    "cors": "^2.8.5",
     "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "helmet": "^7.2.0",
+    "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.1"
+    "knex": "^3.1.0",
+    "multer": "^2.0.1",
+    "mysql2": "^3.11.0",
+    "web-push": "^3.6.7"
+  },
+  "optionalDependencies": {
+    "sqlite3": "^5.1.7",
+    "pg": "^8.13.0"
   }
 }
