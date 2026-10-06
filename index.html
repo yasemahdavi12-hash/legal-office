@@ -132,6 +132,13 @@ img{max-width:100%;display:block}
 .stat-num{font-size:24px;font-weight:800;color:var(--text);line-height:1}
 .stat-lbl{font-size:11px;color:var(--muted);margin-top:3px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dash-modules{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.dash-module{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 14px;background:#fff;border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--shadow);font-size:13px;font-weight:600;color:var(--primary);transition:border-color .15s,box-shadow .15s;
+}
+.dash-module:hover{border-color:var(--pl);box-shadow:0 2px 8px rgba(30,74,122,.12)}
+.dash-module span.icon{font-size:16px;line-height:1}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -479,6 +486,10 @@ tbody td{padding:11px 12px;vertical-align:middle}
         <div class="stat-card g"><div class="stat-icon ic-g">◎</div><div><div class="stat-num" id="st-clients">—</div><div class="stat-lbl">موکلین</div></div></div>
         <div class="stat-card w"><div class="stat-icon ic-w">✓</div><div><div class="stat-num" id="st-tasks">—</div><div class="stat-lbl">وظایف امروز</div></div></div>
         <div class="stat-card gold"><div class="stat-icon ic-gold">◷</div><div><div class="stat-num" id="st-events">—</div><div class="stat-lbl">جلسات نزدیک</div></div></div>
+      </div>
+      <div class="dash-modules" aria-label="ماژول‌های حقوقی">
+        <a class="dash-module" href="/legal-tools"><span class="icon" aria-hidden="true">⚖️</span> ابزارهای حقوقی</a>
+        <a class="dash-module" href="/laws"><span class="icon" aria-hidden="true">📚</span> قوانین و مقررات</a>
       </div>
       <div class="g2">
         <div class="card">

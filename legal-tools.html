@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f2540">
+<title>ابزارهای حقوقی | قانون در جیب شما</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#0f2540;--pl:#1e4a7a;--bg:#eef2f6;--text:#1a2332;--muted:#64748b;--border:#d8e0ea;--success:#15803d;--warn:#b45309;--r:10px;--shadow:0 1px 3px rgba(15,37,64,.08);--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+button,input{font-family:inherit;outline:none}
+button{cursor:pointer}
+a{color:var(--pl);text-decoration:none;font-weight:600}
+.shell{max-width:1100px;margin:0 auto;padding:16px 18px 40px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.top h1{font-size:18px;color:var(--primary)}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text)}
+.btn-p{background:var(--pl);color:#fff;border-color:var(--pl)}
+.btn-sm{padding:6px 10px;font-size:12px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.cat-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.cat-tab{padding:7px 12px;border-radius:20px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:600;color:var(--muted)}
+.cat-tab.active{background:var(--pl);color:#fff;border-color:var(--pl)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.tool-card{border:1px solid var(--border);border-radius:var(--r);padding:14px;background:#fff;cursor:pointer;transition:border-color .15s}
+.tool-card:hover{border-color:var(--pl)}
+.tool-card h3{font-size:14px;color:var(--primary);margin-bottom:6px}
+.tool-card p{font-size:12px;color:var(--muted);line-height:1.7}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;margin-top:8px}
+.badge-ready{background:#dcfce7;color:var(--success)}
+.badge-soon{background:#fef3c7;color:var(--warn)}
+.tool-view{display:none}
+.tool-view.show{display:block}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:12px;font-weight:600;margin-bottom:5px}
+.fc{width:100%;max-width:320px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px}
+.result{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-top:12px;white-space:pre-wrap}
+.legal-basis{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.links{margin-top:10px;font-size:12px}
+.err{color:#b91c1c;font-size:13px;margin-top:8px}
+@media(max-width:640px){.fc{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top">
+    <h1>⚖️ ابزارهای حقوقی</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn" href="/">← داشبورد</a>
+      <a class="btn" href="/laws">📚 قوانین</a>
+    </div>
+  </div>
+  <div id="view-list">
+    <div class="cat-tabs" id="cat-tabs"></div>
+    <div class="grid" id="tool-grid"></div>
+  </div>
+  <div class="tool-view card" id="view-tool">
+    <button type="button" class="btn btn-sm" id="btn-back">← فهرست ابزارها</button>
+    <h2 id="tool-title" style="margin:12px 0 6px;font-size:17px;color:var(--primary)"></h2>
+    <p id="tool-desc" style="font-size:13px;color:var(--muted);margin-bottom:12px"></p>
+    <div id="tool-form"></div>
+    <div class="err" id="tool-err" hidden></div>
+    <div class="result" id="tool-result" hidden></div>
+    <div class="legal-basis" id="tool-basis"></div>
+    <div class="links" id="tool-law-links"></div>
+  </div>
+</div>
+<script src="/lawyer-modules.js"></script>
+<script>
+const { api, requireLawyerSession, escapeHtml, toast } = LawyerModules;
+let catalog = { categories: [], tools: [] };
+let activeCat = 'all';
+
+const FORM_HTML = {
+  'date-diff': `
+    <div class="fg"><label class="fl">از تاریخ (میلادی YYYY-MM-DD)</label><input class="fc" type="date" id="in-from"></div>
+    <div class="fg"><label class="fl">تا تاریخ</label><input class="fc" type="date" id="in-to"></div>
+    <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
+    <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>`,
+  'deadline-add': `
+    <div class="fg"><label class="fl">تاریخ شروع</label><input class="fc" type="date" id="in-start"></div>
+    <div class="fg"><label class="fl">تعداد روز مهلت</label><input class="fc" type="number" id="in-days" placeholder="مثلاً 20"></div>
+    <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
+    <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>`,
+  'delay-interest-user-rate': `
+    <div class="fg"><label class="fl">اصل (ریال)</label><input class="fc" type="number" id="in-principal" min="1"></div>
+    <div class="fg"><label class="fl">نرخ سالانه (درصد — ورودی شما)</label><input class="fc" type="number" id="in-rate" min="0" step="0.01"></div>
+    <div class="fg"><label class="fl">تعداد روز</label><input class="fc" type="number" id="in-days2" min="1"></div>
+    <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
+    <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>`
+};
+
+let currentSlug = null;
+
+function renderCats() {
+  const tabs = document.getElementById('cat-tabs');
+  const cats = [{ id: 'all', title: 'همه' }, ...catalog.categories];
+  tabs.innerHTML = cats.map(c =>
+    `<button type="button" class="cat-tab ${activeCat === c.id ? 'active' : ''}" data-c="${escapeHtml(c.id)}">${escapeHtml(c.title)}</button>`
+  ).join('');
+  tabs.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.onclick = () => { activeCat = btn.dataset.c; renderGrid(); renderCats(); };
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById('tool-grid');
+  let list = catalog.tools.slice();
+  if (activeCat !== 'all') list = list.filter(t => t.category === activeCat);
+  grid.innerHTML = list.map(t => `
+    <div class="tool-card" data-slug="${escapeHtml(t.slug)}">
+      <h3>${escapeHtml(t.title)}</h3>
+      <p>${escapeHtml(t.description || '')}</p>
+      <span class="badge ${t.status === 'ready' ? 'badge-ready' : 'badge-soon'}">${t.status === 'ready' ? 'فعال' : 'در حال تکمیل'}</span>
+    </div>`).join('');
+  grid.querySelectorAll('.tool-card').forEach(el => {
+    el.onclick = () => openTool(el.dataset.slug);
+  });
+}
+
+function openTool(slug) {
+  const t = catalog.tools.find(x => x.slug === slug);
+  if (!t) return;
+  currentSlug = slug;
+  document.getElementById('view-list').style.display = 'none';
+  document.getElementById('view-tool').classList.add('show');
+  document.getElementById('tool-title').textContent = t.title;
+  document.getElementById('tool-desc').textContent = t.description || '';
+  document.getElementById('tool-basis').textContent = t.legalBasis ? 'مبنای محاسبه: ' + t.legalBasis : '';
+  document.getElementById('tool-err').hidden = true;
+  document.getElementById('tool-result').hidden = true;
+  const form = document.getElementById('tool-form');
+  if (t.status !== 'ready') {
+    form.innerHTML = '<p style="font-size:13px;color:var(--warn)">این ابزار پس از بارگذاری منبع قانونی معتبر فعال می‌شود.</p>';
+  } else {
+    form.innerHTML = FORM_HTML[slug] || '<p>فرم در دسترس نیست.</p>';
+  }
+  const links = (t.relatedArticles || []).map(a =>
+    `<a href="/laws#article/${a.articleId}">مبنای قانونی → ماده ${escapeHtml(a.articleNumber)} (${escapeHtml(a.lawTitle)})</a>`
+  ).join(' · ');
+  document.getElementById('tool-law-links').innerHTML = links || '';
+  location.hash = 'tool/' + slug;
+}
+
+function closeTool() {
+  currentSlug = null;
+  document.getElementById('view-tool').classList.remove('show');
+  document.getElementById('view-list').style.display = 'block';
+  location.hash = '';
+}
+
+function resetTool() {
+  document.getElementById('tool-result').hidden = true;
+  document.getElementById('tool-err').hidden = true;
+  document.querySelectorAll('#tool-form input').forEach(i => { i.value = ''; });
+}
+
+function collectBody(slug) {
+  if (slug === 'date-diff') {
+    return { dateFrom: document.getElementById('in-from').value, dateTo: document.getElementById('in-to').value };
+  }
+  if (slug === 'deadline-add') {
+    return { startDate: document.getElementById('in-start').value, daysToAdd: document.getElementById('in-days').value };
+  }
+  if (slug === 'delay-interest-user-rate') {
+    return {
+      principal: document.getElementById('in-principal').value,
+      annualRatePercent: document.getElementById('in-rate').value,
+      days: document.getElementById('in-days2').value
+    };
+  }
+  return {};
+}
+
+async function runCalc() {
+  if (!currentSlug) return;
+  document.getElementById('tool-err').hidden = true;
+  try {
+    const data = await api('POST', '/legal-tools/' + encodeURIComponent(currentSlug) + '/calculate', collectBody(currentSlug));
+    const r = data.result || {};
+    let text = JSON.stringify(r, null, 2);
+    if (r.interestAmount != null) {
+      text = `مبلغ سود/خسارت: ${Number(r.interestAmount).toLocaleString('fa-IR')} (واحد ورودی)\n` + (r.disclaimer || '');
+    }
+    if (r.absDays != null) {
+      text = `فاصله: ${r.absDays} روز (${r.direction === 'forward' ? 'رو به جلو' : 'رو به عقب'})\n${r.note || ''}`;
+    }
+    if (r.endDate) {
+      text = `تاریخ پایان مهلت: ${r.endDate}\n${r.note || ''}`;
+    }
+    document.getElementById('tool-result').textContent = text;
+    document.getElementById('tool-result').hidden = false;
+    if (data.relatedArticles && data.relatedArticles.length) {
+      const links = data.relatedArticles.map(a =>
+        `<a href="/laws#article/${a.articleId}">مشاهده ماده ${escapeHtml(a.articleNumber)}</a>`
+      ).join(' · ');
+      document.getElementById('tool-law-links').innerHTML = links;
+    }
+  } catch (e) {
+    const el = document.getElementById('tool-err');
+    el.textContent = e.message || 'خطا';
+    el.hidden = false;
+  }
+}
+
+document.getElementById('btn-back').onclick = closeTool;
+
+async function boot() {
+  const me = await requireLawyerSession();
+  if (!me) return;
+  catalog = await api('GET', '/legal-tools');
+  renderCats();
+  renderGrid();
+  const m = location.hash.match(/^#tool\/(.+)$/);
+  if (m) openTool(decodeURIComponent(m[1]));
+}
+
+boot();
+</script>
+</body>
+</html>

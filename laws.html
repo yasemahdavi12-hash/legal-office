@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f2540">
+<title>قوانین و مقررات | قانون در جیب شما</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#0f2540;--pl:#1e4a7a;--bg:#eef2f6;--text:#1a2332;--muted:#64748b;--border:#d8e0ea;--r:10px;--shadow:0 1px 3px rgba(15,37,64,.08);--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7}
+button,input{font-family:inherit;outline:none}
+button{cursor:pointer}
+a{color:var(--pl);text-decoration:none;font-weight:600}
+.shell{max-width:960px;margin:0 auto;padding:16px 18px 48px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.top h1{font-size:18px;color:var(--primary)}
+.btn{display:inline-flex;align-items:center;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text)}
+.btn-p{background:var(--pl);color:#fff;border-color:var(--pl)}
+.btn-sm{padding:6px 10px;font-size:12px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.search{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:12px}
+.search:focus{border-color:var(--pl);box-shadow:0 0 0 3px rgba(30,74,122,.12)}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:16px}
+.cat-item{padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:12px;font-weight:600;text-align:center;cursor:pointer}
+.cat-item:hover,.cat-item.active{border-color:var(--pl);color:var(--pl)}
+.law-row{padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.law-row:last-child{border-bottom:none}
+.law-row h3{font-size:14px;color:var(--primary)}
+.law-row p{font-size:12px;color:var(--muted)}
+.article-item{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px}
+.article-body{white-space:pre-wrap;font-size:14px;line-height:1.9;margin:14px 0;padding:14px;background:#f8fafc;border-radius:8px;border:1px solid var(--border)}
+.meta{font-size:12px;color:var(--muted);margin-bottom:10px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px}
+.view{display:none}
+.view.show{display:block}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top">
+    <h1>📚 قوانین و مقررات</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn" href="/">← داشبورد</a>
+      <a class="btn" href="/legal-tools">⚖️ ابزارها</a>
+    </div>
+  </div>
+
+  <div id="view-home" class="view show">
+    <div class="card">
+      <input class="search" id="q-global" placeholder="جستجو: نام قانون، شماره ماده، متن ماده…" aria-label="جستجوی قوانین">
+      <div class="cat-grid" id="cat-grid"></div>
+      <div id="search-results"></div>
+      <h2 style="font-size:14px;color:var(--primary);margin:12px 0 8px">فهرست قوانین</h2>
+      <div id="law-list"><div class="empty">در حال بارگذاری…</div></div>
+    </div>
+    <div class="card">
+      <h2 style="font-size:14px;color:var(--primary);margin-bottom:8px">مواد ذخیره‌شده</h2>
+      <div id="saved-list"><div class="empty">موردی ذخیره نشده است.</div></div>
+    </div>
+  </div>
+
+  <div id="view-law" class="view card">
+    <button type="button" class="btn btn-sm" id="btn-law-back">← بازگشت</button>
+    <h2 id="law-title" style="margin:10px 0;font-size:17px;color:var(--primary)"></h2>
+    <div class="meta" id="law-meta"></div>
+    <input class="search" id="q-law" placeholder="جستجو داخل این قانون…">
+    <div id="article-list"></div>
+  </div>
+
+  <div id="view-article" class="view card">
+    <button type="button" class="btn btn-sm" id="btn-article-back">← بازگشت به قانون</button>
+    <h2 id="art-title" style="margin:10px 0;font-size:16px;color:var(--primary)"></h2>
+    <div class="meta" id="art-meta"></div>
+    <div class="article-body" id="art-content"></div>
+    <div class="actions">
+      <button type="button" class="btn btn-sm" id="btn-copy">کپی متن</button>
+      <button type="button" class="btn btn-sm btn-p" id="btn-save">ذخیره ماده</button>
+      <button type="button" class="btn btn-sm" id="btn-share">اشتراک لینک</button>
+      <button type="button" class="btn btn-sm" id="btn-prev">ماده قبلی</button>
+      <button type="button" class="btn btn-sm" id="btn-next">ماده بعدی</button>
+    </div>
+    <div id="art-tools" style="margin-top:12px;font-size:13px"></div>
+  </div>
+</div>
+<script src="/lawyer-modules.js"></script>
+<script>
+const { api, requireLawyerSession, escapeHtml, toast } = LawyerModules;
+let meta = { categories: [], hasContent: false, message: '' };
+let laws = [];
+let currentLawId = null;
+let currentArticle = null;
+let activeCategory = '';
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('show'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('show');
+}
+
+function renderCats() {
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = meta.categories.map(c =>
+    `<div class="cat-item ${activeCategory === c.id ? 'active' : ''}" data-id="${escapeHtml(c.id)}">${escapeHtml(c.title)}</div>`
+  ).join('');
+  grid.querySelectorAll('.cat-item').forEach(el => {
+    el.onclick = () => {
+      activeCategory = activeCategory === el.dataset.id ? '' : el.dataset.id;
+      loadLaws();
+      renderCats();
+    };
+  });
+}
+
+async function loadLaws() {
+  const q = document.getElementById('q-global').value.trim();
+  const params = new URLSearchParams();
+  if (activeCategory) params.set('category', activeCategory);
+  if (q) params.set('q', q);
+  laws = await api('GET', '/laws' + (params.toString() ? '?' + params : ''));
+  const list = document.getElementById('law-list');
+  if (!laws.length) {
+    list.innerHTML = `<div class="empty">${escapeHtml(meta.message || 'قانونی یافت نشد. پس از import متن معتبر، فهرست اینجا نمایش داده می‌شود.')}</div>`;
+    return;
+  }
+  list.innerHTML = laws.map(l => `
+    <div class="law-row" data-id="${l.id}">
+      <h3>${escapeHtml(l.title)}</h3>
+      <p>${escapeHtml(l.description || l.category || '')}</p>
+    </div>`).join('');
+  list.querySelectorAll('.law-row').forEach(row => {
+    row.onclick = () => openLaw(Number(row.dataset.id));
+  });
+}
+
+async function runSearch() {
+  const q = document.getElementById('q-global').value.trim();
+  const box = document.getElementById('search-results');
+  if (!q) { box.innerHTML = ''; return loadLaws(); }
+  const hits = await api('GET', '/laws/search?q=' + encodeURIComponent(q));
+  if (!hits.length) {
+    box.innerHTML = '<div class="empty" style="padding:16px">نتیجه‌ای یافت نشد.</div>';
+    return;
+  }
+  box.innerHTML = '<h3 style="font-size:13px;margin:8px 0">نتایج جستجو</h3>' + hits.map(h => `
+    <div class="article-item" data-aid="${h.id}">
+      <strong>${escapeHtml(h.lawTitle)} — ماده ${escapeHtml(h.articleNumber)}</strong>
+      <div style="font-size:12px;color:var(--muted)">${escapeHtml(h.excerpt || '')}</div>
+    </div>`).join('');
+  box.querySelectorAll('.article-item').forEach(el => {
+    el.onclick = () => openArticle(Number(el.dataset.aid));
+  });
+}
+
+async function loadSaved() {
+  const rows = await api('GET', '/laws/saved');
+  const el = document.getElementById('saved-list');
+  if (!rows.length) {
+    el.innerHTML = '<div class="empty">موردی ذخیره نشده است.</div>';
+    return;
+  }
+  el.innerHTML = rows.map(r => `
+    <div class="article-item" data-aid="${r.articleId}">
+      ${escapeHtml(r.lawTitle)} — ماده ${escapeHtml(r.article_number || r.articleNumber)}
+    </div>`).join('');
+  el.querySelectorAll('.article-item').forEach(item => {
+    item.onclick = () => openArticle(Number(item.dataset.aid));
+  });
+}
+
+async function openLaw(id) {
+  currentLawId = id;
+  const law = await api('GET', '/laws/' + id);
+  showView('view-law');
+  document.getElementById('law-title').textContent = law.title;
+  document.getElementById('law-meta').textContent = [
+    law.category, law.approvalDate, law.source
+  ].filter(Boolean).join(' · ');
+  location.hash = 'law/' + id;
+  await refreshArticles();
+}
+
+async function refreshArticles() {
+  const q = document.getElementById('q-law').value.trim();
+  const params = q ? '?q=' + encodeURIComponent(q) : '';
+  const articles = await api('GET', '/laws/' + currentLawId + '/articles' + params);
+  const list = document.getElementById('article-list');
+  if (!articles.length) {
+    list.innerHTML = '<div class="empty">ماده‌ای ثبت نشده است.</div>';
+    return;
+  }
+  list.innerHTML = articles.map(a => `
+    <div class="article-item" data-aid="${a.id}">
+      <strong>ماده ${escapeHtml(a.articleNumber)}</strong>
+      ${a.title ? ' — ' + escapeHtml(a.title) : ''}
+      <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.excerpt || '')}</div>
+    </div>`).join('');
+  list.querySelectorAll('.article-item').forEach(el => {
+    el.onclick = () => openArticle(Number(el.dataset.aid));
+  });
+}
+
+async function openArticle(id) {
+  const art = await api('GET', '/laws/articles/' + id);
+  currentArticle = art;
+  currentLawId = art.lawId;
+  showView('view-article');
+  document.getElementById('art-title').textContent =
+    (art.law && art.law.title ? art.law.title + ' — ' : '') + 'ماده ' + art.articleNumber;
+  document.getElementById('art-meta').textContent = [art.title, art.source].filter(Boolean).join(' · ');
+  document.getElementById('art-content').textContent = art.content || '';
+  document.getElementById('btn-save').textContent = art.saved ? 'حذف از ذخیره‌ها' : 'ذخیره ماده';
+  document.getElementById('btn-prev').disabled = !art.prev;
+  document.getElementById('btn-next').disabled = !art.next;
+  document.getElementById('btn-prev').onclick = () => art.prev && openArticle(art.prev.id);
+  document.getElementById('btn-next').onclick = () => art.next && openArticle(art.next.id);
+  const tools = (art.relatedTools || []).map(t =>
+    `<a href="/legal-tools#tool/${encodeURIComponent(t.slug)}">ابزار مرتبط → ${escapeHtml(t.title)}</a>`
+  ).join(' · ');
+  document.getElementById('art-tools').innerHTML = tools;
+  location.hash = 'article/' + id;
+}
+
+document.getElementById('btn-law-back').onclick = () => {
+  showView('view-home');
+  location.hash = '';
+};
+document.getElementById('btn-article-back').onclick = () => {
+  if (currentLawId) openLaw(currentLawId);
+  else { showView('view-home'); location.hash = ''; }
+};
+document.getElementById('btn-copy').onclick = () => {
+  if (!currentArticle) return;
+  navigator.clipboard.writeText(currentArticle.content || '').then(() => toast('متن کپی شد'));
+};
+document.getElementById('btn-share').onclick = () => {
+  if (!currentArticle) return;
+  const url = location.origin + '/laws#article/' + currentArticle.id;
+  navigator.clipboard.writeText(url).then(() => toast('لینک کپی شد'));
+};
+document.getElementById('btn-save').onclick = async () => {
+  if (!currentArticle) return;
+  if (currentArticle.saved) {
+    await api('DELETE', '/laws/articles/' + currentArticle.id + '/save');
+    currentArticle.saved = false;
+    toast('از ذخیره‌ها حذف شد');
+  } else {
+    await api('POST', '/laws/articles/' + currentArticle.id + '/save');
+    currentArticle.saved = true;
+    toast('ذخیره شد');
+  }
+  document.getElementById('btn-save').textContent = currentArticle.saved ? 'حذف از ذخیره‌ها' : 'ذخیره ماده';
+  loadSaved();
+};
+
+let searchTimer;
+document.getElementById('q-global').oninput = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 350);
+};
+document.getElementById('q-law').oninput = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(refreshArticles, 350);
+};
+
+async function boot() {
+  const me = await requireLawyerSession();
+  if (!me) return;
+  meta = await api('GET', '/laws/meta');
+  renderCats();
+  await loadLaws();
+  await loadSaved();
+  const hm = location.hash.match(/^#law\/(\d+)$/);
+  const ha = location.hash.match(/^#article\/(\d+)$/);
+  if (ha) await openArticle(Number(ha[1]));
+  else if (hm) await openLaw(Number(hm[1]));
+}
+
+boot();
+</script>
+</body>
+</html>
