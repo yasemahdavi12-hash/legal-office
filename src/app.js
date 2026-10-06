@@ -23,6 +23,8 @@ const remindersRoutes = require('./routes/reminders.routes');
 const aiRoutes = require('./routes/ai.routes');
 const portalRoutes = require('./routes/portal.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const legalToolsRoutes = require('./routes/legalTools.routes');
+const lawsRoutes = require('./routes/laws.routes');
 
 function createApp() {
   const app = express();
@@ -96,6 +98,7 @@ function createApp() {
 
   const publicFiles = new Set([
     'index.html', 'admin.html', 'logout.html', 'offline.html', 'manifest.json', 'sw.js',
+    'legal-tools.html', 'laws.html', 'lawyer-modules.js',
     'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png'
   ]);
 
@@ -158,6 +161,16 @@ function createApp() {
   app.use('/api/ai', aiRoutes);
   app.use('/api/portal', portalRoutes);
   app.use('/api/notifications', notificationRoutes);
+  app.use('/api/legal-tools', legalToolsRoutes);
+  app.use('/api/laws', lawsRoutes);
+
+  app.get('/legal-tools', (req, res) => {
+    res.sendFile(path.join(root, 'legal-tools.html'));
+  });
+
+  app.get('/laws', (req, res) => {
+    res.sendFile(path.join(root, 'laws.html'));
+  });
 
   app.get('/admin', (req, res) => {
     res.sendFile(path.join(root, 'admin.html'));
