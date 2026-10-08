@@ -1,15 +1,49 @@
 const { AppError } = require('../../utils/response');
+const mehrIndexService = require('../legal/mehrIndex.service');
+const { calculateMehrPure, parseJalaliYear } = require('./mehrIndex/calculatePure');
+const { parseJalaliDeathDate } = require('./mehrIndex/parseJalaliDeathDate');
+
+const FIELD_LABELS = {
+  dateFrom: 'تاریخ اول',
+  dateTo: 'تاریخ دوم',
+  startDate: 'تاریخ شروع'
+};
 
 function parseIsoDate(raw, fieldName) {
+  const label = FIELD_LABELS[fieldName] || fieldName;
   const s = String(raw ?? '').trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-    throw new AppError(`${fieldName} باید به صورت YYYY-MM-DD باشد`, 400);
+  if (!s) {
+    throw new AppError(`${label} الزامی است`, 400);
   }
-  const d = new Date(`${s}T12:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    throw new AppError(`${label} باید به صورت YYYY-MM-DD (میلادی) باشد`, 400);
+  }
+  const d = new Date(`${s}T12:00:00.000Z`);
   if (Number.isNaN(d.getTime())) {
-    throw new AppError(`${fieldName} نامعتبر است`, 400);
+    throw new AppError(`${label} نامعتبر است`, 400);
+  }
+  const normalized = d.toISOString().slice(0, 10);
+  if (normalized !== s) {
+    throw new AppError(`${label} در تقویم میلادی معتبر نیست`, 400);
   }
   return d;
+}
+
+function parseIntegerField(raw, label, { min, max } = {}) {
+  if (raw === '' || raw == null) {
+    throw new AppError(`${label} الزامی است`, 400);
+  }
+  const n = Number(raw);
+  if (!Number.isFinite(n) || !Number.isInteger(n)) {
+    throw new AppError(`${label} باید عدد صحیح باشد`, 400);
+  }
+  if (min != null && n < min) {
+    throw new AppError(`${label} خارج از محدوده مجاز است`, 400);
+  }
+  if (max != null && n > max) {
+    throw new AppError(`${label} خارج از محدوده مجاز است`, 400);
+  }
+  return n;
 }
 
 function dateDiff({ dateFrom, dateTo }) {
@@ -17,68 +51,118 @@ function dateDiff({ dateFrom, dateTo }) {
   const to = parseIsoDate(dateTo, 'dateTo');
   const ms = to.getTime() - from.getTime();
   const days = Math.round(ms / 86400000);
+  const forward = days >= 0;
   return {
     days,
     absDays: Math.abs(days),
-    direction: days >= 0 ? 'forward' : 'backward',
-    dateFrom: dateFrom,
-    dateTo: dateTo,
-    note: 'محاسبه بر اساس تقویم میلادی (UTC noon).'
+    direction: forward ? 'forward' : 'backward',
+    dateFrom: String(dateFrom).trim(),
+    dateTo: String(dateTo).trim(),
+    calendar: 'gregorian',
+    note:
+      'فاصله بر اساس روز تقویمی میلادی (UTC noon) محاسبه شده است؛ جایگزین مهلت قانونی یا تعطیلات رسمی نیست.'
   };
 }
 
+const DEADLINE_DAY_LIMIT = 36500;
+
 function deadlineAdd({ startDate, daysToAdd }) {
   const start = parseIsoDate(startDate, 'startDate');
-  const n = Number(daysToAdd);
-  if (!Number.isFinite(n) || !Number.isInteger(n)) {
-    throw new AppError('daysToAdd باید عدد صحیح باشد', 400);
-  }
-  if (n < -36500 || n > 36500) {
-    throw new AppError('daysToAdd خارج از محدوده مجاز است', 400);
-  }
+  const n = parseIntegerField(daysToAdd, 'تعداد روز', {
+    min: -DEADLINE_DAY_LIMIT,
+    max: DEADLINE_DAY_LIMIT
+  });
   const end = new Date(start.getTime() + n * 86400000);
   const endStr = end.toISOString().slice(0, 10);
+  const startNorm = String(startDate).trim();
+  let directionNote;
+  if (n > 0) {
+    directionNote = `${n} روز به تاریخ شروع اضافه شد.`;
+  } else if (n < 0) {
+    directionNote = `${Math.abs(n)} روز از تاریخ شروع کم شد.`;
+  } else {
+    directionNote = 'تاریخ پایان با تاریخ شروع یکسان است (۰ روز).';
+  }
   return {
-    startDate,
+    startDate: startNorm,
     daysToAdd: n,
     endDate: endStr,
-    note: 'مهلت قانونی را از متن قانون استخراج و به‌صورت تعداد روز وارد کنید.'
+    calendar: 'gregorian',
+    direction: n >= 0 ? 'forward' : 'backward',
+    note: `محاسبه بر اساس روز تقویمی میلادی (UTC noon). ${directionNote}`
   };
 }
 
 function delayInterestUserRate({ principal, annualRatePercent, days }) {
   const p = Number(principal);
+  if (principal === '' || principal == null || !Number.isFinite(p) || p <= 0) {
+    throw new AppError('اصل بدهی باید عدد مثبت باشد', 400);
+  }
   const rate = Number(annualRatePercent);
-  const d = Number(days);
-  if (!Number.isFinite(p) || p <= 0) {
-    throw new AppError('principal باید عدد مثبت باشد', 400);
+  if (annualRatePercent === '' || annualRatePercent == null || !Number.isFinite(rate) || rate < 0 || rate > 1000) {
+    throw new AppError('نرخ سالانه باید عددی بین ۰ تا ۱۰۰۰ باشد', 400);
   }
-  if (!Number.isFinite(rate) || rate < 0 || rate > 1000) {
-    throw new AppError('annualRatePercent نامعتبر است', 400);
-  }
-  if (!Number.isFinite(d) || d <= 0 || !Number.isInteger(d)) {
-    throw new AppError('days باید عدد صحیح مثبت باشد', 400);
-  }
+  const d = parseIntegerField(days, 'تعداد روز', { min: 0, max: DEADLINE_DAY_LIMIT });
   const interest = (p * (rate / 100) * d) / 365;
-  const rounded = Math.round(interest * 100) / 100;
+  const interestAmount = Math.round(interest * 100) / 100;
+  const totalAmount = Math.round((p + interestAmount) * 100) / 100;
   return {
     principal: p,
     annualRatePercent: rate,
     days: d,
-    interestAmount: rounded,
+    interestAmount,
+    totalAmount,
     formula: 'principal × (rate/100) × (days/365)',
-    disclaimer: 'نرخ را خودتان از قانون/قرارداد وارد کرده‌اید؛ این سامانه نرخ رسمی تأخیر تأدیه را اعمال نمی‌کند.'
+    note:
+      'این محاسبه بر اساس نرخ واردشده توسط کاربر انجام شده و به‌تنهایی به معنی تعیین نرخ قانونی خسارت تأخیر تأدیه نیست.'
   };
 }
 
-const HANDLERS = {
+function missingYearsWhenNoStore(body) {
+  const b = body || {};
+  const contractYear = parseJalaliYear(b.contractYear, 'سال وقوع عقد');
+  const basisType = String(b.basisType ?? '').trim();
+  let referenceYear;
+  if (basisType === 'payment') {
+    referenceYear = parseJalaliYear(b.paymentYear, 'سال پرداخت');
+  } else if (basisType === 'death') {
+    referenceYear = parseJalaliDeathDate(b.deathDate).deathYear;
+  } else {
+    throw new AppError('basisType باید payment یا death باشد', 400);
+  }
+  const indexYearNumerator = referenceYear - 1;
+  return [...new Set([contractYear, indexYearNumerator])].sort((a, b) => a - b);
+}
+
+async function mehrCalc(body) {
+  const store = await mehrIndexService.getStore();
+  if (!store) {
+    const missingYears = missingYearsWhenNoStore(body);
+    throw new AppError('شاخص رسمی موردنیاز برای سال موردنظر در سامانه موجود نیست.', 422, {
+      code: 'LEGAL_DATA_NOT_AVAILABLE',
+      dataKind: 'mehr_annual_index',
+      missingYears
+    });
+  }
+  const datasetVersion = await mehrIndexService.getDatasetVersion();
+  return calculateMehrPure(body || {}, store, datasetVersion);
+}
+
+const SYNC_HANDLERS = {
   'date-diff': dateDiff,
   'deadline-add': deadlineAdd,
   'delay-interest-user-rate': delayInterestUserRate
 };
 
-function calculate(slug, body) {
-  const fn = HANDLERS[slug];
+const ASYNC_HANDLERS = {
+  'mehr-calc': mehrCalc
+};
+
+async function calculate(slug, body) {
+  if (ASYNC_HANDLERS[slug]) {
+    return ASYNC_HANDLERS[slug](body || {});
+  }
+  const fn = SYNC_HANDLERS[slug];
   if (!fn) {
     throw new AppError('این ابزار هنوز فعال نیست', 400, { code: 'TOOL_NOT_READY' });
   }
@@ -87,7 +171,10 @@ function calculate(slug, body) {
 
 module.exports = {
   calculate,
+  calculateMehrieh: mehrCalc,
   dateDiff,
   deadlineAdd,
-  delayInterestUserRate
+  delayInterestUserRate,
+  parseIsoDate,
+  DEADLINE_DAY_LIMIT
 };

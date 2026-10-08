@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0f2540">
-<title>ابزارهای حقوقی | قانون در جیب شما</title>
+<title>ابزارهای حقوقی | دادبان</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#0f2540;--pl:#1e4a7a;--bg:#eef2f6;--text:#1a2332;--muted:#64748b;--border:#d8e0ea;--success:#15803d;--warn:#b45309;--r:10px;--shadow:0 1px 3px rgba(15,37,64,.08);--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
@@ -35,11 +35,23 @@ a{color:var(--pl);text-decoration:none;font-weight:600}
 .fg{margin-bottom:12px}
 .fl{display:block;font-size:12px;font-weight:600;margin-bottom:5px}
 .fc{width:100%;max-width:320px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px}
-.result{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-top:12px;white-space:pre-wrap}
-.legal-basis{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.fc.invalid{border-color:#b91c1c}
+.tool-hint{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.75;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border)}
+.result{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-top:12px;line-height:1.85}
+.result dl{margin:0}
+.result dt{font-weight:700;color:var(--primary);margin-top:8px}
+.result dt:first-child{margin-top:0}
+.result dd{margin:2px 0 0;color:var(--text)}
+.result .note{margin-top:10px;font-size:12px;color:var(--muted)}
 .links{margin-top:10px;font-size:12px}
-.err{color:#b91c1c;font-size:13px;margin-top:8px}
-@media(max-width:640px){.fc{max-width:100%}}
+.err{color:#b91c1c;font-size:13px;margin-top:8px;padding:8px 10px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca}
+.form-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+@media(max-width:640px){
+  .fc{max-width:100%}
+  .shell{padding:12px 14px 32px}
+  .top h1{font-size:16px}
+  .form-actions .btn{flex:1 1 auto;min-width:120px}
+}
 </style>
 </head>
 <body>
@@ -47,7 +59,7 @@ a{color:var(--pl);text-decoration:none;font-weight:600}
   <div class="top">
     <h1>⚖️ ابزارهای حقوقی</h1>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <a class="btn" href="/">← داشبورد</a>
+      <a class="btn" href="/app">← داشبورد</a>
       <a class="btn" href="/laws">📚 قوانین</a>
     </div>
   </div>
@@ -62,36 +74,199 @@ a{color:var(--pl);text-decoration:none;font-weight:600}
     <div id="tool-form"></div>
     <div class="err" id="tool-err" hidden></div>
     <div class="result" id="tool-result" hidden></div>
-    <div class="legal-basis" id="tool-basis"></div>
     <div class="links" id="tool-law-links"></div>
   </div>
 </div>
 <script src="/lawyer-modules.js"></script>
 <script>
-const { api, requireLawyerSession, escapeHtml, toast } = LawyerModules;
+const { api, requireLawyerSession, escapeHtml } = LawyerModules;
+const DAY_LIMIT = 36500;
 let catalog = { categories: [], tools: [] };
 let activeCat = 'all';
 
-const FORM_HTML = {
-  'date-diff': `
-    <div class="fg"><label class="fl">از تاریخ (میلادی YYYY-MM-DD)</label><input class="fc" type="date" id="in-from"></div>
-    <div class="fg"><label class="fl">تا تاریخ</label><input class="fc" type="date" id="in-to"></div>
-    <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
-    <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>`,
-  'deadline-add': `
-    <div class="fg"><label class="fl">تاریخ شروع</label><input class="fc" type="date" id="in-start"></div>
-    <div class="fg"><label class="fl">تعداد روز مهلت</label><input class="fc" type="number" id="in-days" placeholder="مثلاً 20"></div>
-    <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
-    <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>`,
-  'delay-interest-user-rate': `
-    <div class="fg"><label class="fl">اصل (ریال)</label><input class="fc" type="number" id="in-principal" min="1"></div>
-    <div class="fg"><label class="fl">نرخ سالانه (درصد — ورودی شما)</label><input class="fc" type="number" id="in-rate" min="0" step="0.01"></div>
-    <div class="fg"><label class="fl">تعداد روز</label><input class="fc" type="number" id="in-days2" min="1"></div>
-    <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
-    <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>`
+const TOOL_HINTS = {
+  'date-diff':
+    'این ابزار فاصله تقویمی بین دو تاریخ میلادی را محاسبه می‌کند و جایگزین محاسبه مهلت قانونی یا تعطیلات رسمی نیست.',
+  'deadline-add':
+    'مدت مهلت را بر حسب تعداد روز وارد کنید. محاسبه بر اساس روز تقویمی میلادی است؛ برای کم کردن روز، عدد منفی وارد کنید.',
+  'delay-interest-user-rate':
+    'نرخ سالانه را خودتان وارد می‌کنید. این ابزار هیچ نرخ رسمی را اعمال نمی‌کند.',
+  'mehr-calc':
+    'فقط مهریه وجه رایج. شاخص‌های سالانه از داده ثبت‌شده در سامانه خوانده می‌شود؛ اگر سالی در سامانه نباشد، محاسبه انجام نمی‌شود.'
 };
 
+const FORM_HTML = {
+  'date-diff': `
+    <div class="fg"><label class="fl" for="in-from">از تاریخ (میلادی)</label><input class="fc" type="date" id="in-from" required></div>
+    <div class="fg"><label class="fl" for="in-to">تا تاریخ (میلادی)</label><input class="fc" type="date" id="in-to" required></div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
+      <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>
+    </div>`,
+  'deadline-add': `
+    <div class="fg"><label class="fl" for="in-start">تاریخ شروع (میلادی)</label><input class="fc" type="date" id="in-start" required></div>
+    <div class="fg"><label class="fl" for="in-days">تعداد روز مهلت</label><input class="fc" type="number" id="in-days" step="1" placeholder="مثلاً ۲۰ یا −۵"></div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
+      <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>
+    </div>`,
+  'delay-interest-user-rate': `
+    <div class="fg"><label class="fl" for="in-principal">اصل بدهی (ریال)</label><input class="fc" type="number" id="in-principal" min="0" step="any"></div>
+    <div class="fg"><label class="fl" for="in-rate">نرخ سالانه (درصد — ورودی شما)</label><input class="fc" type="number" id="in-rate" min="0" max="1000" step="0.01"></div>
+    <div class="fg"><label class="fl" for="in-days2">تعداد روز</label><input class="fc" type="number" id="in-days2" min="0" step="1"></div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
+      <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>
+    </div>`,
+  'mehr-calc': `
+    <div class="fg"><label class="fl" for="in-mehr-amount">مبلغ مهریه</label><input class="fc" type="number" id="in-mehr-amount" min="0" step="any" required></div>
+    <div class="fg"><label class="fl" for="in-mehr-currency">واحد</label>
+      <select class="fc" id="in-mehr-currency"><option value="IRT">تومان</option><option value="IRR">ریال</option></select>
+    </div>
+    <div class="fg"><label class="fl" for="in-mehr-contract-year">سال وقوع عقد (شمسی)</label><input class="fc" type="number" id="in-mehr-contract-year" step="1" required></div>
+    <div class="fg"><label class="fl" for="in-mehr-basis">مبنای محاسبه</label>
+      <select class="fc" id="in-mehr-basis"><option value="payment">پرداخت</option><option value="death">فوت / ترکه</option></select>
+    </div>
+    <div class="fg" id="mehr-payment-fields"><label class="fl" for="in-mehr-payment-year">سال پرداخت (شمسی)</label><input class="fc" type="number" id="in-mehr-payment-year" step="1"></div>
+    <div class="fg" id="mehr-death-fields" hidden><label class="fl" for="in-mehr-death-date">تاریخ فوت (شمسی YYYY-MM-DD)</label><input class="fc" type="text" id="in-mehr-death-date" placeholder="مثلاً 1403-06-15" pattern="\\d{4}-\\d{2}-\\d{2}"></div>
+    <p class="tool-hint" id="mehr-index-unavailable-text" hidden>شاخص رسمی موردنیاز برای این سال هنوز در سامانه ثبت نشده است.</p>
+    <div class="form-actions">
+      <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
+      <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>
+    </div>`
+};
+
+const READY_SLUGS = new Set(['date-diff', 'deadline-add', 'delay-interest-user-rate', 'mehr-calc']);
+
+const MEHR_DISCLAIMER = 'این ابزار صرفاً یک ابزار محاسباتی/کمکی است و جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست. محاسبه فقط بر اساس شاخص‌های ثبت‌شده در سامانه انجام می‌شود.';
+const MEHR_NO_COIN = 'مهریه سکه در این نسخه پشتیبانی نمی‌شود.';
+const MEHR_ART110 = 'موضوع ۱۱۰ سکه مربوط به ضمانت اجرای وصول است و با محاسبه ارزش روز مهریه وجه رایج متفاوت است.';
+
 let currentSlug = null;
+
+function fmtNum(n) {
+  return Number(n).toLocaleString('fa-IR', { maximumFractionDigits: 2 });
+}
+
+function parseIntField(raw, label, min, max) {
+  if (raw === '' || raw == null) throw new Error(`${label} الزامی است`);
+  const n = Number(raw);
+  if (!Number.isFinite(n) || !Number.isInteger(n)) throw new Error(`${label} باید عدد صحیح باشد`);
+  if (min != null && n < min) throw new Error(`${label} خارج از محدوده مجاز است`);
+  if (max != null && n > max) throw new Error(`${label} خارج از محدوده مجاز است`);
+  return n;
+}
+
+function validateClient(slug) {
+  document.querySelectorAll('#tool-form .fc').forEach((el) => el.classList.remove('invalid'));
+  if (slug === 'date-diff') {
+    const from = document.getElementById('in-from').value;
+    const to = document.getElementById('in-to').value;
+    if (!from) { document.getElementById('in-from').classList.add('invalid'); throw new Error('تاریخ اول الزامی است'); }
+    if (!to) { document.getElementById('in-to').classList.add('invalid'); throw new Error('تاریخ دوم الزامی است'); }
+    return { dateFrom: from, dateTo: to };
+  }
+  if (slug === 'deadline-add') {
+    const start = document.getElementById('in-start').value;
+    if (!start) { document.getElementById('in-start').classList.add('invalid'); throw new Error('تاریخ شروع الزامی است'); }
+    const days = parseIntField(document.getElementById('in-days').value, 'تعداد روز', -DAY_LIMIT, DAY_LIMIT);
+    return { startDate: start, daysToAdd: days };
+  }
+  if (slug === 'delay-interest-user-rate') {
+    const principalRaw = document.getElementById('in-principal').value;
+    const rateRaw = document.getElementById('in-rate').value;
+    const daysRaw = document.getElementById('in-days2').value;
+    const p = Number(principalRaw);
+    if (principalRaw === '' || !Number.isFinite(p) || p <= 0) {
+      document.getElementById('in-principal').classList.add('invalid');
+      throw new Error('اصل بدهی باید عدد مثبت باشد');
+    }
+    const rate = Number(rateRaw);
+    if (rateRaw === '' || !Number.isFinite(rate) || rate < 0 || rate > 1000) {
+      document.getElementById('in-rate').classList.add('invalid');
+      throw new Error('نرخ سالانه باید عددی بین ۰ تا ۱۰۰۰ باشد');
+    }
+    const days = parseIntField(daysRaw, 'تعداد روز', 0, DAY_LIMIT);
+    return { principal: p, annualRatePercent: rate, days };
+  }
+  if (slug === 'mehr-calc') {
+    const amountRaw = document.getElementById('in-mehr-amount').value;
+    const p = Number(amountRaw);
+    if (amountRaw === '' || !Number.isFinite(p) || p <= 0) {
+      document.getElementById('in-mehr-amount').classList.add('invalid');
+      throw new Error('مبلغ مهریه باید عدد مثبت باشد');
+    }
+    const currency = document.getElementById('in-mehr-currency').value;
+    const contractYear = parseIntField(document.getElementById('in-mehr-contract-year').value, 'سال وقوع عقد', 1200, 1500);
+    const basisType = document.getElementById('in-mehr-basis').value;
+    const body = { amount: p, currency, contractYear, basisType };
+    if (basisType === 'payment') {
+      body.paymentYear = parseIntField(document.getElementById('in-mehr-payment-year').value, 'سال پرداخت', 1200, 1500);
+    } else {
+      const dd = document.getElementById('in-mehr-death-date').value.trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dd)) {
+        document.getElementById('in-mehr-death-date').classList.add('invalid');
+        throw new Error('تاریخ فوت باید به صورت YYYY-MM-DD باشد');
+      }
+      body.deathDate = dd;
+    }
+    return body;
+  }
+  return {};
+}
+
+function syncMehrBasisFields() {
+  const basis = document.getElementById('in-mehr-basis');
+  if (!basis) return;
+  const isPay = basis.value === 'payment';
+  document.getElementById('mehr-payment-fields').hidden = !isPay;
+  document.getElementById('mehr-death-fields').hidden = isPay;
+}
+
+function renderResultHtml(slug, r) {
+  if (slug === 'date-diff') {
+    const dir = r.direction === 'forward' ? 'تاریخ دوم بعد از تاریخ اول' : 'تاریخ دوم قبل از تاریخ اول';
+    return `<dl>
+      <dt>فاصله</dt><dd>${fmtNum(r.absDays)} روز تقویمی</dd>
+      <dt>جهت</dt><dd>${escapeHtml(dir)}</dd>
+      <dt>از</dt><dd>${escapeHtml(r.dateFrom)}</dd>
+      <dt>تا</dt><dd>${escapeHtml(r.dateTo)}</dd>
+    </dl><p class="note">${escapeHtml(r.note || '')}</p>`;
+  }
+  if (slug === 'deadline-add') {
+    return `<dl>
+      <dt>تاریخ شروع</dt><dd>${escapeHtml(r.startDate)}</dd>
+      <dt>تعداد روز</dt><dd>${fmtNum(r.daysToAdd)}</dd>
+      <dt>تاریخ پایان</dt><dd><strong>${escapeHtml(r.endDate)}</strong></dd>
+    </dl><p class="note">${escapeHtml(r.note || '')}</p>`;
+  }
+  if (slug === 'delay-interest-user-rate') {
+    return `<dl>
+      <dt>اصل بدهی</dt><dd>${fmtNum(r.principal)}</dd>
+      <dt>نرخ سالانه (ورودی شما)</dt><dd>${fmtNum(r.annualRatePercent)}٪</dd>
+      <dt>تعداد روز</dt><dd>${fmtNum(r.days)}</dd>
+      <dt>مبلغ سود محاسبه‌شده</dt><dd>${fmtNum(r.interestAmount)}</dd>
+      <dt>جمع (اصل + سود)</dt><dd><strong>${fmtNum(r.totalAmount)}</strong></dd>
+    </dl><p class="note">${escapeHtml(r.note || r.disclaimer || '')}</p>`;
+  }
+  if (slug === 'mehr-calc') {
+    const notes = (r.notes || []).map(n => `<li>${escapeHtml(n)}</li>`).join('');
+    return `<dl id="mehr-result-container">
+      <dt>مبلغ اولیه</dt><dd>${fmtNum(r.originalAmount)} ${escapeHtml(r.inputCurrency === 'IRT' ? 'تومان' : 'ریال')}</dd>
+      <dt>مبلغ (ریال)</dt><dd>${fmtNum(r.amountInIRR)}</dd>
+      <dt>سال عقد</dt><dd>${fmtNum(r.contractYear)}</dd>
+      <dt>سال مرجع</dt><dd>${fmtNum(r.referenceYear)}</dd>
+      <dt>سال شاخص صورت</dt><dd>${fmtNum(r.indexYearNumerator)}</dd>
+      <dt>شاخص سال عقد</dt><dd>${fmtNum(r.contractIndex)}</dd>
+      <dt>شاخص سال صورت</dt><dd>${fmtNum(r.paymentIndex)}</dd>
+      <dt>مبلغ محاسبه‌شده (ریال)</dt><dd><strong>${fmtNum(r.calculatedAmount)}</strong></dd>
+      <dt>فرمول</dt><dd>${escapeHtml(r.formula || '')}</dd>
+    </dl>
+    <p class="note">${escapeHtml(r.disclaimer || MEHR_DISCLAIMER)}</p>
+    <ul class="note">${notes}</ul>`;
+  }
+  return escapeHtml(JSON.stringify(r, null, 2));
+}
 
 function renderCats() {
   const tabs = document.getElementById('cat-tabs');
@@ -127,17 +302,24 @@ function openTool(slug) {
   document.getElementById('view-tool').classList.add('show');
   document.getElementById('tool-title').textContent = t.title;
   document.getElementById('tool-desc').textContent = t.description || '';
-  document.getElementById('tool-basis').textContent = t.legalBasis ? 'مبنای محاسبه: ' + t.legalBasis : '';
   document.getElementById('tool-err').hidden = true;
   document.getElementById('tool-result').hidden = true;
   const form = document.getElementById('tool-form');
   if (t.status !== 'ready') {
     form.innerHTML = '<p style="font-size:13px;color:var(--warn)">این ابزار پس از بارگذاری منبع قانونی معتبر فعال می‌شود.</p>';
   } else {
-    form.innerHTML = FORM_HTML[slug] || '<p>فرم در دسترس نیست.</p>';
+    const hint = TOOL_HINTS[slug] ? `<p class="tool-hint">${escapeHtml(TOOL_HINTS[slug])}</p>` : '';
+    form.innerHTML = hint + (FORM_HTML[slug] || '<p>فرم در دسترس نیست.</p>');
+    if (slug === 'mehr-calc') {
+      const basisEl = document.getElementById('in-mehr-basis');
+      if (basisEl) {
+        basisEl.addEventListener('change', syncMehrBasisFields);
+        syncMehrBasisFields();
+      }
+    }
   }
   const links = (t.relatedArticles || []).map(a =>
-    `<a href="/laws#article/${a.articleId}">مبنای قانونی → ماده ${escapeHtml(a.articleNumber)} (${escapeHtml(a.lawTitle)})</a>`
+    `<a href="/laws#article/${a.articleId}">پیوند قانون → ماده ${escapeHtml(a.articleNumber)} (${escapeHtml(a.lawTitle)})</a>`
   ).join(' · ');
   document.getElementById('tool-law-links').innerHTML = links || '';
   location.hash = 'tool/' + slug;
@@ -153,43 +335,17 @@ function closeTool() {
 function resetTool() {
   document.getElementById('tool-result').hidden = true;
   document.getElementById('tool-err').hidden = true;
-  document.querySelectorAll('#tool-form input').forEach(i => { i.value = ''; });
-}
-
-function collectBody(slug) {
-  if (slug === 'date-diff') {
-    return { dateFrom: document.getElementById('in-from').value, dateTo: document.getElementById('in-to').value };
-  }
-  if (slug === 'deadline-add') {
-    return { startDate: document.getElementById('in-start').value, daysToAdd: document.getElementById('in-days').value };
-  }
-  if (slug === 'delay-interest-user-rate') {
-    return {
-      principal: document.getElementById('in-principal').value,
-      annualRatePercent: document.getElementById('in-rate').value,
-      days: document.getElementById('in-days2').value
-    };
-  }
-  return {};
+  document.querySelectorAll('#tool-form input').forEach(i => { i.value = ''; i.classList.remove('invalid'); });
 }
 
 async function runCalc() {
-  if (!currentSlug) return;
+  if (!currentSlug || !READY_SLUGS.has(currentSlug)) return;
   document.getElementById('tool-err').hidden = true;
   try {
-    const data = await api('POST', '/legal-tools/' + encodeURIComponent(currentSlug) + '/calculate', collectBody(currentSlug));
+    const body = validateClient(currentSlug);
+    const data = await api('POST', '/legal-tools/' + encodeURIComponent(currentSlug) + '/calculate', body);
     const r = data.result || {};
-    let text = JSON.stringify(r, null, 2);
-    if (r.interestAmount != null) {
-      text = `مبلغ سود/خسارت: ${Number(r.interestAmount).toLocaleString('fa-IR')} (واحد ورودی)\n` + (r.disclaimer || '');
-    }
-    if (r.absDays != null) {
-      text = `فاصله: ${r.absDays} روز (${r.direction === 'forward' ? 'رو به جلو' : 'رو به عقب'})\n${r.note || ''}`;
-    }
-    if (r.endDate) {
-      text = `تاریخ پایان مهلت: ${r.endDate}\n${r.note || ''}`;
-    }
-    document.getElementById('tool-result').textContent = text;
+    document.getElementById('tool-result').innerHTML = renderResultHtml(currentSlug, r);
     document.getElementById('tool-result').hidden = false;
     if (data.relatedArticles && data.relatedArticles.length) {
       const links = data.relatedArticles.map(a =>
@@ -199,8 +355,16 @@ async function runCalc() {
     }
   } catch (e) {
     const el = document.getElementById('tool-err');
-    el.textContent = e.message || 'خطا';
+    const idxMsg = document.getElementById('mehr-index-unavailable-text');
+    if (idxMsg) idxMsg.hidden = true;
+    if (currentSlug === 'mehr-calc' && e.status === 422 && e.body?.details?.code === 'LEGAL_DATA_NOT_AVAILABLE') {
+      el.textContent = e.body.error || 'شاخص رسمی موردنیاز برای این سال هنوز در سامانه ثبت نشده است.';
+      if (idxMsg) idxMsg.hidden = false;
+    } else {
+      el.textContent = e.message || 'خطا';
+    }
     el.hidden = false;
+    document.getElementById('tool-result').hidden = true;
   }
 }
 

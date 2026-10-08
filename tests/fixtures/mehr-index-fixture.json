@@ -1,0 +1,13 @@
+{
+  "_comment": "TEST ONLY — NOT OFFICIAL DATA. Do not use in production seed or ingest.",
+  "datasetVersion": "test-mehr-index-fixture-v1",
+  "calendarSystem": "jalali",
+  "rows": [
+    { "year": 1388, "averageIndex": 80 },
+    { "year": 1390, "averageIndex": 100 },
+    { "year": 1395, "averageIndex": 150 },
+    { "year": 1399, "averageIndex": 200 },
+    { "year": 1400, "averageIndex": 250 },
+    { "year": 1401, "averageIndex": 300 }
+  ]
+}

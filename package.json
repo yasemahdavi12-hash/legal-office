@@ -19,6 +19,9 @@
     "test:production": "node -r dotenv/config scripts/test-production-hardening.js",
     "test:mysql:migrate": "node -r dotenv/config scripts/test-mysql-migrate.js",
     "test:mysql:crud": "node -r dotenv/config scripts/test-mysql-crud.js",
+    "test:mehr-index": "node scripts/test-mehr-index-fixture.js && node scripts/test-mehr-calc-pure.js",
+    "test:legal-tools": "node -r dotenv/config scripts/test-legal-tools.js",
+    "test:mehr-calc": "node scripts/test-mehr-calc-pure.js",
     "ci:production-deps": "npm ci --omit=optional"
   },
   "dependencies": {
@@ -35,7 +38,10 @@
     "web-push": "^3.6.7"
   },
   "optionalDependencies": {
-    "sqlite3": "^5.1.7",
-    "pg": "^8.13.0"
+    "pg": "^8.13.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
   }
 }

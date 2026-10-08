@@ -63,7 +63,7 @@ async function runCalculation(slug, body, user) {
   if (tool.status !== 'ready') {
     throw new AppError('این ابزار هنوز فعال نیست', 400, { code: 'TOOL_NOT_READY' });
   }
-  const result = calculators.calculate(slug, body);
+  const result = await calculators.calculate(slug, body);
   const relatedArticles = await getRelatedArticles(slug);
   return {
     tool: { slug: tool.slug, title: tool.title, legalBasis: tool.legalBasis },
