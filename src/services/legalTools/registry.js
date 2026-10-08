@@ -1,6 +1,9 @@
 /**
  * Tool catalog — status "ready" only when backend calculator exists and does not rely on unverified legal rates.
+ * mehr-calc effective status also depends on official index dataset (see legalTools.service).
  */
+const INACTIVE_MSG = 'پس از ورود منبع رسمی و قابل اعتبارسنجی فعال می‌شود.';
+
 const CATEGORIES = Object.freeze([
   { id: 'family', title: 'خانواده' },
   { id: 'criminal', title: 'کیفری' },
@@ -42,42 +45,47 @@ const TOOLS = Object.freeze([
     category: 'family',
     status: 'ready',
     description:
-      'محاسبه تقریبی/آموزشی ارزش روز مهریه وجه رایج بر اساس شاخص‌های سالانه ثبت‌شده در سامانه.'
+      'مهریه وجه رایج بر اساس شاخص‌های سالانه رسمی ثبت‌شده در سامانه (بانک مرکزی تا سال شاخص ۱۴۰۱).'
   },
   {
     slug: 'court-fees',
     title: 'هزینه دادرسی',
     category: 'financial',
     status: 'coming_soon',
-    description: 'نیاز به جدول هزینه دادرسی مصوب — بدون داده معتبر در سامانه.'
+    inactiveReason: INACTIVE_MSG,
+    description: `تعرفه رسمی هزینه دادرسی در سامانه وارد نشده است. ${INACTIVE_MSG}`
   },
   {
     slug: 'attorney-fee',
     title: 'حق‌الوکاله',
     category: 'financial',
     status: 'coming_soon',
-    description: 'نیاز به تعرفه رسمی یا قرارداد — ابزار پرونده در دادبان جداگانه موجود است.'
+    inactiveReason: INACTIVE_MSG,
+    description: `تعرفه رسمی حق‌الوکاله در سامانه وارد نشده است. ${INACTIVE_MSG}`
   },
   {
     slug: 'diyeh',
     title: 'محاسبات دیه',
     category: 'criminal',
     status: 'coming_soon',
-    description: 'نیاز به مبالغ دیه مصوب سال — بدون جدول معتبر در سامانه.'
+    inactiveReason: INACTIVE_MSG,
+    description: `جدول سالانه دیه مصوب در سامانه وارد نشده است. ${INACTIVE_MSG}`
   },
   {
     slug: 'cheque-tools',
     title: 'چک و سفته',
     category: 'cheque',
     status: 'coming_soon',
-    description: 'محاسبات تخصصی پس از تعریف منابع قانونی معتبر.'
+    inactiveReason: INACTIVE_MSG,
+    description: `قواعد و جداول رسمی محاسباتی چک/سفته در سامانه آماده نیست. ${INACTIVE_MSG}`
   },
   {
     slug: 'inheritance-share',
     title: 'سهم‌الارث',
     category: 'inheritance',
     status: 'coming_soon',
-    description: 'نیاز به قواعد فقهی/قانونی و ورودی‌های کامل وراث — در حال تکمیل.'
+    inactiveReason: INACTIVE_MSG,
+    description: `موتور قواعد ارث با منبع رسمی و قابل اعتبارسنجی در سامانه آماده نیست. ${INACTIVE_MSG}`
   }
 ]);
 
@@ -92,4 +100,4 @@ function getTool(slug) {
   return TOOLS.find((t) => t.slug === slug) || null;
 }
 
-module.exports = { CATEGORIES, TOOLS, listCatalog, getTool };
+module.exports = { CATEGORIES, TOOLS, listCatalog, getTool, INACTIVE_MSG };

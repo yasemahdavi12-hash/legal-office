@@ -95,6 +95,9 @@ const TOOL_HINTS = {
     'فقط مهریه وجه رایج. شاخص‌های سالانه از داده ثبت‌شده در سامانه خوانده می‌شود؛ اگر سالی در سامانه نباشد، محاسبه انجام نمی‌شود.'
 };
 
+const MEHR_DISCLAIMER = 'این ابزار محاسبه‌ای کمکی است و جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست. محاسبه فقط بر اساس شاخص‌های رسمی واردشده در سامانه انجام می‌شود و در صورت نبود شاخص رسمی برای سال موردنیاز، نتیجه تخمینی ارائه نمی‌شود.';
+const MEHR_COVERAGE_FOOTNOTE = 'آخرین شاخص رسمی موجود در سامانه مربوط به سال ۱۴۰۱ است؛ بنابراین محاسبه برای سال مرجع تا ۱۴۰۲ امکان‌پذیر است. برای سال‌های بعد، پس از انتشار و ورود شاخص رسمی جدید، ابزار به‌روزرسانی می‌شود.';
+
 const FORM_HTML = {
   'date-diff': `
     <div class="fg"><label class="fl" for="in-from">از تاریخ (میلادی)</label><input class="fc" type="date" id="in-from" required></div>
@@ -119,30 +122,33 @@ const FORM_HTML = {
       <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>
     </div>`,
   'mehr-calc': `
+    <p class="tool-hint" id="mehr-coverage-notice">این ابزار در نسخه فعلی فقط با شاخص‌های رسمی موجود تا سال ۱۴۰۱ کار می‌کند و محاسبه را برای سال مرجع تا ۱۴۰۲ انجام می‌دهد.</p>
     <div class="fg"><label class="fl" for="in-mehr-amount">مبلغ مهریه</label><input class="fc" type="number" id="in-mehr-amount" min="0" step="any" required></div>
     <div class="fg"><label class="fl" for="in-mehr-currency">واحد</label>
       <select class="fc" id="in-mehr-currency"><option value="IRT">تومان</option><option value="IRR">ریال</option></select>
     </div>
     <div class="fg"><label class="fl" for="in-mehr-contract-year">سال وقوع عقد (شمسی)</label><input class="fc" type="number" id="in-mehr-contract-year" step="1" required></div>
     <div class="fg"><label class="fl" for="in-mehr-basis">مبنای محاسبه</label>
-      <select class="fc" id="in-mehr-basis"><option value="payment">پرداخت</option><option value="death">فوت / ترکه</option></select>
+      <select class="fc" id="in-mehr-basis"><option value="payment">تأدیه</option><option value="death">فوت / ترکه</option></select>
     </div>
-    <div class="fg" id="mehr-payment-fields"><label class="fl" for="in-mehr-payment-year">سال پرداخت (شمسی)</label><input class="fc" type="number" id="in-mehr-payment-year" step="1"></div>
-    <div class="fg" id="mehr-death-fields" hidden><label class="fl" for="in-mehr-death-date">تاریخ فوت (شمسی YYYY-MM-DD)</label><input class="fc" type="text" id="in-mehr-death-date" placeholder="مثلاً 1403-06-15" pattern="\\d{4}-\\d{2}-\\d{2}"></div>
-    <p class="tool-hint" id="mehr-index-unavailable-text" hidden>شاخص رسمی موردنیاز برای این سال هنوز در سامانه ثبت نشده است.</p>
+    <div id="mehr-payment-fields">
+      <div class="fg"><label class="fl" for="in-mehr-payment-date">تاریخ پرداخت (شمسی YYYY-MM-DD)</label><input class="fc" type="text" id="in-mehr-payment-date" placeholder="اختیاری — مثلاً 1402-03-01" pattern="\\d{4}-\\d{2}-\\d{2}"></div>
+      <div class="fg"><label class="fl" for="in-mehr-payment-year">سال پرداخت (شمسی)</label><input class="fc" type="number" id="in-mehr-payment-year" step="1" placeholder="اگر تاریخ ندارید"></div>
+    </div>
+    <div class="fg" id="mehr-death-fields" hidden><label class="fl" for="in-mehr-death-date">تاریخ فوت (شمسی YYYY-MM-DD)</label><input class="fc" type="text" id="in-mehr-death-date" placeholder="مثلاً 1402-06-15" pattern="\\d{4}-\\d{2}-\\d{2}"></div>
+    <p class="tool-hint" id="mehr-index-unavailable-text" hidden>شاخص رسمی مورد نیاز برای این سال هنوز در سامانه وارد نشده است.</p>
+    <p class="note">${MEHR_DISCLAIMER}</p>
     <div class="form-actions">
       <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
       <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>
     </div>`
 };
 
-const READY_SLUGS = new Set(['date-diff', 'deadline-add', 'delay-interest-user-rate', 'mehr-calc']);
-
-const MEHR_DISCLAIMER = 'این ابزار صرفاً یک ابزار محاسباتی/کمکی است و جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست. محاسبه فقط بر اساس شاخص‌های ثبت‌شده در سامانه انجام می‌شود.';
-const MEHR_NO_COIN = 'مهریه سکه در این نسخه پشتیبانی نمی‌شود.';
-const MEHR_ART110 = 'موضوع ۱۱۰ سکه مربوط به ضمانت اجرای وصول است و با محاسبه ارزش روز مهریه وجه رایج متفاوت است.';
-
 let currentSlug = null;
+
+function readySlugsFromCatalog() {
+  return new Set((catalog.tools || []).filter((t) => t.status === 'ready').map((t) => t.slug));
+}
 
 function fmtNum(n) {
   return Number(n).toLocaleString('fa-IR', { maximumFractionDigits: 2 });
@@ -197,11 +203,24 @@ function validateClient(slug) {
       throw new Error('مبلغ مهریه باید عدد مثبت باشد');
     }
     const currency = document.getElementById('in-mehr-currency').value;
-    const contractYear = parseIntField(document.getElementById('in-mehr-contract-year').value, 'سال وقوع عقد', 1200, 1500);
+    const contractYear = parseIntField(document.getElementById('in-mehr-contract-year').value, 'سال وقوع عقد', 1315, 1401);
     const basisType = document.getElementById('in-mehr-basis').value;
     const body = { amount: p, currency, contractYear, basisType };
     if (basisType === 'payment') {
-      body.paymentYear = parseIntField(document.getElementById('in-mehr-payment-year').value, 'سال پرداخت', 1200, 1500);
+      const pDate = document.getElementById('in-mehr-payment-date').value.trim();
+      const pYearRaw = document.getElementById('in-mehr-payment-year').value;
+      if (pDate) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(pDate)) {
+          document.getElementById('in-mehr-payment-date').classList.add('invalid');
+          throw new Error('تاریخ پرداخت باید به صورت YYYY-MM-DD باشد');
+        }
+        body.paymentDate = pDate;
+      } else if (pYearRaw !== '' && pYearRaw != null) {
+        body.paymentYear = parseIntField(pYearRaw, 'سال پرداخت', 1315, 1402);
+      } else {
+        document.getElementById('in-mehr-payment-year').classList.add('invalid');
+        throw new Error('سال پرداخت یا تاریخ پرداخت الزامی است');
+      }
     } else {
       const dd = document.getElementById('in-mehr-death-date').value.trim();
       if (!/^\d{4}-\d{2}-\d{2}$/.test(dd)) {
@@ -250,20 +269,22 @@ function renderResultHtml(slug, r) {
     </dl><p class="note">${escapeHtml(r.note || r.disclaimer || '')}</p>`;
   }
   if (slug === 'mehr-calc') {
-    const notes = (r.notes || []).map(n => `<li>${escapeHtml(n)}</li>`).join('');
+    const impl = (r.implementationNotes || []).map(n => `<li>${escapeHtml(n)}</li>`).join('');
+    const cov = r.coverage || {};
     return `<dl id="mehr-result-container">
       <dt>مبلغ اولیه</dt><dd>${fmtNum(r.originalAmount)} ${escapeHtml(r.inputCurrency === 'IRT' ? 'تومان' : 'ریال')}</dd>
-      <dt>مبلغ (ریال)</dt><dd>${fmtNum(r.amountInIRR)}</dd>
+      <dt>مبلغ (ریال)</dt><dd>${fmtNum(r.amountInRial)}</dd>
       <dt>سال عقد</dt><dd>${fmtNum(r.contractYear)}</dd>
-      <dt>سال مرجع</dt><dd>${fmtNum(r.referenceYear)}</dd>
-      <dt>سال شاخص صورت</dt><dd>${fmtNum(r.indexYearNumerator)}</dd>
-      <dt>شاخص سال عقد</dt><dd>${fmtNum(r.contractIndex)}</dd>
-      <dt>شاخص سال صورت</dt><dd>${fmtNum(r.paymentIndex)}</dd>
-      <dt>مبلغ محاسبه‌شده (ریال)</dt><dd><strong>${fmtNum(r.calculatedAmount)}</strong></dd>
+      <dt>شاخص سال عقد</dt><dd>${fmtNum(r.contractIndex)} <span style="color:var(--muted)">(سال ${fmtNum(r.appliedIndexYearDenominator)})</span></dd>
+      <dt>شاخص سال صورت</dt><dd>${fmtNum(r.paymentIndex)} <span style="color:var(--muted)">(سال ${fmtNum(r.appliedIndexYearNumerator)})</span></dd>
+      <dt>نتیجه (ریال)</dt><dd><strong>${fmtNum(r.calculatedAmount)}</strong></dd>
       <dt>فرمول</dt><dd>${escapeHtml(r.formula || '')}</dd>
+      <dt>نسخه dataset</dt><dd>${escapeHtml(r.indexDatasetVersion || '—')}</dd>
+      <dt>پوشش شاخص</dt><dd>${fmtNum(cov.indexMinYear)} تا ${fmtNum(cov.indexMaxYear)} — حداکثر سال مرجع ${fmtNum(cov.maxReferenceYear)}</dd>
     </dl>
     <p class="note">${escapeHtml(r.disclaimer || MEHR_DISCLAIMER)}</p>
-    <ul class="note">${notes}</ul>`;
+    <p class="note">${escapeHtml(MEHR_COVERAGE_FOOTNOTE)}</p>
+    ${impl ? `<ul class="note">${impl}</ul>` : ''}`;
   }
   return escapeHtml(JSON.stringify(r, null, 2));
 }
@@ -306,7 +327,9 @@ function openTool(slug) {
   document.getElementById('tool-result').hidden = true;
   const form = document.getElementById('tool-form');
   if (t.status !== 'ready') {
-    form.innerHTML = '<p style="font-size:13px;color:var(--warn)">این ابزار پس از بارگذاری منبع قانونی معتبر فعال می‌شود.</p>';
+    const reason = t.inactiveReason || 'پس از ورود منبع رسمی و قابل اعتبارسنجی فعال می‌شود.';
+    form.innerHTML = `<p style="font-size:13px;color:var(--warn)">${escapeHtml(reason)}</p>`;
+    document.getElementById('tool-law-links').innerHTML = '';
   } else {
     const hint = TOOL_HINTS[slug] ? `<p class="tool-hint">${escapeHtml(TOOL_HINTS[slug])}</p>` : '';
     form.innerHTML = hint + (FORM_HTML[slug] || '<p>فرم در دسترس نیست.</p>');
@@ -318,10 +341,14 @@ function openTool(slug) {
       }
     }
   }
-  const links = (t.relatedArticles || []).map(a =>
-    `<a href="/laws#article/${a.articleId}">پیوند قانون → ماده ${escapeHtml(a.articleNumber)} (${escapeHtml(a.lawTitle)})</a>`
-  ).join(' · ');
-  document.getElementById('tool-law-links').innerHTML = links || '';
+  if (t.status === 'ready' && (t.relatedArticles || []).length) {
+    const links = t.relatedArticles.map(a =>
+      `<a href="/laws#article/${a.articleId}">پیوند قانون → ماده ${escapeHtml(a.articleNumber)} (${escapeHtml(a.lawTitle)})</a>`
+    ).join(' · ');
+    document.getElementById('tool-law-links').innerHTML = links;
+  } else if (t.status === 'ready') {
+    document.getElementById('tool-law-links').innerHTML = '';
+  }
   location.hash = 'tool/' + slug;
 }
 
@@ -339,8 +366,12 @@ function resetTool() {
 }
 
 async function runCalc() {
-  if (!currentSlug || !READY_SLUGS.has(currentSlug)) return;
+  const ready = readySlugsFromCatalog();
+  if (!currentSlug || !ready.has(currentSlug)) return;
   document.getElementById('tool-err').hidden = true;
+  const resultEl = document.getElementById('tool-result');
+  resultEl.hidden = false;
+  resultEl.innerHTML = '<p class="note">در حال محاسبه…</p>';
   try {
     const body = validateClient(currentSlug);
     const data = await api('POST', '/legal-tools/' + encodeURIComponent(currentSlug) + '/calculate', body);
@@ -357,8 +388,8 @@ async function runCalc() {
     const el = document.getElementById('tool-err');
     const idxMsg = document.getElementById('mehr-index-unavailable-text');
     if (idxMsg) idxMsg.hidden = true;
-    if (currentSlug === 'mehr-calc' && e.status === 422 && e.body?.details?.code === 'LEGAL_DATA_NOT_AVAILABLE') {
-      el.textContent = e.body.error || 'شاخص رسمی موردنیاز برای این سال هنوز در سامانه ثبت نشده است.';
+    if (currentSlug === 'mehr-calc' && e.status === 422 && e.body?.details?.code === 'INDEX_NOT_AVAILABLE') {
+      el.textContent = e.body.error || 'شاخص رسمی مورد نیاز برای این محاسبه در سامانه موجود نیست.';
       if (idxMsg) idxMsg.hidden = false;
     } else {
       el.textContent = e.message || 'خطا';

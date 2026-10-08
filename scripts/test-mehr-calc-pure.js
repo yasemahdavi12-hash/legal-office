@@ -1,5 +1,5 @@
 /**
- * Pure mehr calculator tests — TEST fixture only (not official audit data).
+ * Pure mehr calculator tests — TEST fixture for math; audit fixture for coverage years.
  */
 const { AppError } = require('../src/utils/response');
 const { loadTestFixtureStore, loadAuditFixtureStore, MehrIndexStore } = require('../src/services/legalTools/mehrIndex/indexStore');
@@ -8,6 +8,7 @@ const {
   roundCalculatedAmount,
   parsePositiveAmount
 } = require('../src/services/legalTools/mehrIndex/calculatePure');
+const { MIN_YEAR, MAX_YEAR, MAX_REFERENCE_YEAR } = require('../src/services/legalTools/mehrIndex/constants');
 
 const testStore = loadTestFixtureStore();
 const auditStore = loadAuditFixtureStore();
@@ -18,14 +19,14 @@ function assert(name, cond, detail = '') {
   console.log(`${cond ? 'PASS' : 'FAIL'}  ${name}${detail ? ' — ' + detail : ''}`);
 }
 
-function expectLegalDataMissing(name, fn, status = 422) {
+function expectIndexMissing(name, fn, status = 422) {
   try {
     fn();
     assert(name, false, 'expected throw');
   } catch (e) {
     const c = e instanceof AppError ? e.details?.code : null;
     const st = e instanceof AppError ? e.status : null;
-    assert(name, e instanceof AppError && c === 'LEGAL_DATA_NOT_AVAILABLE' && st === status, e.message);
+    assert(name, e instanceof AppError && c === 'INDEX_NOT_AVAILABLE' && st === status, e.message);
   }
 }
 
@@ -38,7 +39,6 @@ function expectValidation(name, fn) {
   }
 }
 
-// --- TEST FIXTURE calculations ---
 const normal = calculateMehrPure(
   {
     amount: 1_000_000,
@@ -50,21 +50,11 @@ const normal = calculateMehrPure(
   testStore,
   'test-mehr-index-fixture-v1'
 );
-assert('normal multi-year amount', normal.calculatedAmount === 2_000_000, String(normal.calculatedAmount));
-assert('indexYearNumerator 1399', normal.indexYearNumerator === 1399);
-
-const toman = calculateMehrPure(
-  {
-    amount: 100_000,
-    currency: 'IRT',
-    contractYear: 1390,
-    basisType: 'payment',
-    paymentYear: 1400
-  },
-  testStore,
-  'test-mehr-index-fixture-v1'
-);
-assert('IRT → IRR', toman.amountInIRR === 1_000_000 && toman.calculatedAmount === 2_000_000);
+assert('normal calculation', normal.calculatedAmount === 2_000_000, String(normal.calculatedAmount));
+assert('normal IRR currency', normal.currency === 'IRR' && normal.inputCurrency === 'IRR');
+assert('response formula contract', normal.formula === 'M × I_prev / I_contract');
+assert('paymentBasis field', normal.paymentBasis === 'payment');
+assert('appliedIndexYearNumerator 1399', normal.appliedIndexYearNumerator === 1399);
 
 const sameYear = calculateMehrPure(
   {
@@ -78,10 +68,48 @@ const sameYear = calculateMehrPure(
   'test-mehr-index-fixture-v1'
 );
 assert(
-  'same reference/contract year',
-  sameYear.indexYearNumerator === 1399 && sameYear.calculatedAmount === 40_000_000,
+  'same-year edge',
+  sameYear.appliedIndexYearNumerator === 1399 && sameYear.calculatedAmount === 40_000_000,
   String(sameYear.calculatedAmount)
 );
+assert('coverage maxReferenceYear', normal.coverage?.maxReferenceYear === MAX_REFERENCE_YEAR);
+
+const toman = calculateMehrPure(
+  {
+    amount: 100_000,
+    currency: 'IRT',
+    contractYear: 1390,
+    basisType: 'payment',
+    paymentYear: 1400
+  },
+  testStore,
+  'test-mehr-index-fixture-v1'
+);
+assert('IRT → IRR', toman.amountInRial === 1_000_000 && toman.calculatedAmount === 2_000_000);
+
+const contractMin = calculateMehrPure(
+  {
+    amount: 1_000_000,
+    currency: 'IRR',
+    contractYear: MIN_YEAR,
+    basisType: 'payment',
+    paymentYear: 1400
+  },
+  auditStore
+);
+assert('contractYear min 1315', contractMin.contractYear === MIN_YEAR);
+
+const contract1401 = calculateMehrPure(
+  {
+    amount: 1_000_000,
+    currency: 'IRR',
+    contractYear: MAX_YEAR,
+    basisType: 'payment',
+    paymentYear: 1402
+  },
+  auditStore
+);
+assert('contractYear 1401', contract1401.contractYear === 1401 && contract1401.appliedIndexYearNumerator === 1401);
 
 const death = calculateMehrPure(
   {
@@ -98,21 +126,52 @@ assert('death basis', death.referenceYear === 1400 && death.calculatedAmount ===
 
 assert('deterministic rounding', roundCalculatedAmount(1.4) === 1 && roundCalculatedAmount(1.6) === 2);
 
-expectValidation('amount zero', () =>
+expectValidation('zero amount', () =>
   calculateMehrPure(
     { amount: 0, currency: 'IRR', contractYear: 1390, basisType: 'payment', paymentYear: 1400 },
     testStore
   )
 );
-expectValidation('amount negative', () =>
+expectValidation('negative amount', () =>
   calculateMehrPure(
     { amount: -1, currency: 'IRR', contractYear: 1390, basisType: 'payment', paymentYear: 1400 },
     testStore
   )
 );
+expectValidation('invalid amount NaN', () => parsePositiveAmount('abc', 'IRR'));
 expectValidation('invalid currency', () => parsePositiveAmount(100, 'USD'));
+expectValidation('invalid contract year low', () =>
+  calculateMehrPure(
+    { amount: 1, currency: 'IRR', contractYear: 999, basisType: 'payment', paymentYear: 1400 },
+    testStore
+  )
+);
+expectValidation('contract year after reference', () =>
+  calculateMehrPure(
+    {
+      amount: 1_000_000,
+      currency: 'IRR',
+      contractYear: 1400,
+      basisType: 'payment',
+      paymentYear: 1390
+    },
+    testStore
+  )
+);
+expectValidation('missing payment data', () =>
+  calculateMehrPure(
+    { amount: 1_000_000, currency: 'IRR', contractYear: 1390, basisType: 'payment' },
+    testStore
+  )
+);
+expectValidation('missing deathDate', () =>
+  calculateMehrPure(
+    { amount: 1_000_000, currency: 'IRR', contractYear: 1390, basisType: 'death' },
+    testStore
+  )
+);
 
-expectLegalDataMissing('missing contract index', () =>
+expectIndexMissing('missing contract index', () =>
   calculateMehrPure(
     {
       amount: 1_000_000,
@@ -125,7 +184,7 @@ expectLegalDataMissing('missing contract index', () =>
   )
 );
 
-expectLegalDataMissing('missing numerator index', () =>
+expectIndexMissing('missing numerator index paymentYear 1403', () =>
   calculateMehrPure(
     {
       amount: 1_000_000,
@@ -133,19 +192,6 @@ expectLegalDataMissing('missing numerator index', () =>
       contractYear: 1395,
       basisType: 'payment',
       paymentYear: 1403
-    },
-    testStore
-  )
-);
-
-expectValidation('reference before contract chronology', () =>
-  calculateMehrPure(
-    {
-      amount: 1_000_000,
-      currency: 'IRR',
-      contractYear: 1400,
-      basisType: 'payment',
-      paymentYear: 1390
     },
     testStore
   )
@@ -165,7 +211,6 @@ expectValidation('death with paymentYear rejected', () =>
   )
 );
 
-// --- Official audit fixture: 1402 ok, 1403 missing ---
 const pay1402 = calculateMehrPure(
   {
     amount: 10_000_000,
@@ -176,9 +221,9 @@ const pay1402 = calculateMehrPure(
   },
   auditStore
 );
-assert('audit paymentYear 1402', pay1402.indexYearNumerator === 1401);
+assert('paymentYear 1402 PASS', pay1402.appliedIndexYearNumerator === 1401);
 
-expectLegalDataMissing('audit paymentYear 1403', () =>
+expectIndexMissing('paymentYear 1403 INDEX_NOT_AVAILABLE', () =>
   calculateMehrPure(
     {
       amount: 10_000_000,
@@ -186,6 +231,31 @@ expectLegalDataMissing('audit paymentYear 1403', () =>
       contractYear: 1395,
       basisType: 'payment',
       paymentYear: 1403
+    },
+    auditStore
+  )
+);
+
+const death1402 = calculateMehrPure(
+  {
+    amount: 10_000_000,
+    currency: 'IRR',
+    contractYear: 1395,
+    basisType: 'death',
+    deathDate: '1402-06-01'
+  },
+  auditStore
+);
+assert('deathYear 1402 PASS', death1402.appliedIndexYearNumerator === 1401);
+
+expectIndexMissing('deathYear 1403 INDEX_NOT_AVAILABLE', () =>
+  calculateMehrPure(
+    {
+      amount: 10_000_000,
+      currency: 'IRR',
+      contractYear: 1395,
+      basisType: 'death',
+      deathDate: '1403-01-01'
     },
     auditStore
   )

@@ -19,15 +19,22 @@ exports.seed = async function seed(knex) {
 
   await knex('legal_annual_indices').where('dataset_version', datasetVersion).del();
 
+  const officialUrl = 'https://nezamat.ir/post-44530/';
+  const sourceTitle =
+    'اعداد شاخص سالانه جهت محاسبه میزان مهریه به وجه رایج (نامه بانک مرکزی 10899/02)';
+
   const batch = rows.map((r) => ({
     calendar_system: 'jalali',
     year: Number(r.year),
     average_index: Number(r.averageIndex),
-    source_name: String(r.sourceOrganization || r.sourceDocument || '').slice(0, 512),
-    source_url: String(r.sourceUrl || '').slice(0, 1024),
+    source_name: String(r.sourceOrganization || 'بانک مرکزی جمهوری اسلامی ایران').slice(0, 512),
+    source_title: sourceTitle.slice(0, 512),
+    source_url: officialUrl.slice(0, 1024),
     source_number: String(r.sourceDocumentNumber || r.sourceNumber || '10899/02').slice(0, 64),
-    published_at: String(r.publicationDate || r.sourceDate || '1402/01/22').slice(0, 64),
-    dataset_version: String(r.datasetVersion || datasetVersion).slice(0, 128)
+    published_at: String(r.publicationDate || '1402/01/22').slice(0, 64),
+    dataset_version: String(r.datasetVersion || datasetVersion).slice(0, 128),
+    created_at: knex.fn.now(),
+    updated_at: knex.fn.now()
   }));
 
   const chunk = 50;

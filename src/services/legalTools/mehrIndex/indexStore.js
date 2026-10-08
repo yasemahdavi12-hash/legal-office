@@ -27,9 +27,8 @@ class MehrIndexStore {
       throw new AppError('سال شاخص نامعتبر است', 400);
     }
     if (!this.yearToIndex.has(y)) {
-      throw new AppError('شاخص رسمی موردنیاز برای سال موردنظر در سامانه موجود نیست.', 422, {
-        code: 'LEGAL_DATA_NOT_AVAILABLE',
-        dataKind: 'mehr_annual_index',
+      throw new AppError('شاخص رسمی مورد نیاز برای این محاسبه در سامانه موجود نیست.', 422, {
+        code: 'INDEX_NOT_AVAILABLE',
         missingYears: [y]
       });
     }

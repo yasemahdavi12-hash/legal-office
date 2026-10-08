@@ -1,7 +1,8 @@
 const { AppError } = require('../../utils/response');
 const mehrIndexService = require('../legal/mehrIndex.service');
 const { calculateMehrPure, parseJalaliYear } = require('./mehrIndex/calculatePure');
-const { parseJalaliDeathDate } = require('./mehrIndex/parseJalaliDeathDate');
+const { parseJalaliDateYm } = require('./mehrIndex/parseJalaliDateYm');
+const { INDEX_NOT_AVAILABLE_MESSAGE } = require('./mehrIndex/constants');
 
 const FIELD_LABELS = {
   dateFrom: 'تاریخ اول',
@@ -124,9 +125,13 @@ function missingYearsWhenNoStore(body) {
   const basisType = String(b.basisType ?? '').trim();
   let referenceYear;
   if (basisType === 'payment') {
-    referenceYear = parseJalaliYear(b.paymentYear, 'سال پرداخت');
+    if (b.paymentDate) {
+      referenceYear = parseJalaliDateYm(b.paymentDate, 'تاریخ پرداخت').year;
+    } else {
+      referenceYear = parseJalaliYear(b.paymentYear, 'سال پرداخت');
+    }
   } else if (basisType === 'death') {
-    referenceYear = parseJalaliDeathDate(b.deathDate).deathYear;
+    referenceYear = parseJalaliDateYm(b.deathDate, 'تاریخ فوت').year;
   } else {
     throw new AppError('basisType باید payment یا death باشد', 400);
   }
@@ -138,9 +143,8 @@ async function mehrCalc(body) {
   const store = await mehrIndexService.getStore();
   if (!store) {
     const missingYears = missingYearsWhenNoStore(body);
-    throw new AppError('شاخص رسمی موردنیاز برای سال موردنظر در سامانه موجود نیست.', 422, {
-      code: 'LEGAL_DATA_NOT_AVAILABLE',
-      dataKind: 'mehr_annual_index',
+    throw new AppError(INDEX_NOT_AVAILABLE_MESSAGE, 422, {
+      code: 'INDEX_NOT_AVAILABLE',
       missingYears
     });
   }
