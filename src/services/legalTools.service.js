@@ -2,7 +2,7 @@ const db = require('../db/connection');
 const { AppError } = require('../utils/response');
 const { listCatalog, getTool } = require('./legalTools/registry');
 const calculators = require('./legalTools/calculators');
-const mehrIndexService = require('./legal/mehrIndex.service');
+const { getMehrApiDisclaimer } = require('./legalTools/mehrIndex/calculatePure');
 
 function assertLawyerPanel(user) {
   if (!user || user.role === 'client') {
@@ -33,34 +33,14 @@ async function getRelatedArticles(toolSlug) {
   }));
 }
 
-async function resolveEffectiveStatus(tool) {
-  if (tool.slug !== 'mehr-calc') {
-    return { status: tool.status, inactiveReason: tool.inactiveReason || null };
-  }
-  const datasetReady = await mehrIndexService.isMehrCalcDatasetReady();
-  if (datasetReady) {
-    return { status: 'ready', inactiveReason: null };
-  }
-  return {
-    status: 'coming_soon',
-    inactiveReason:
-      'شاخص‌های رسمی سالانه مهریه (بانک مرکزی) هنوز در سامانه وارد نشده‌اند. پس از ورود منبع رسمی و قابل اعتبارسنجی فعال می‌شود.'
-  };
-}
-
 async function listTools(user) {
   assertLawyerPanel(user);
   const { categories, tools } = listCatalog();
   const withLinks = await Promise.all(
-    tools.map(async (t) => {
-      const { status, inactiveReason } = await resolveEffectiveStatus(t);
-      return {
-        ...t,
-        status,
-        inactiveReason,
-        relatedArticles: status === 'ready' ? await getRelatedArticles(t.slug) : []
-      };
-    })
+    tools.map(async (t) => ({
+      ...t,
+      relatedArticles: t.status === 'ready' ? await getRelatedArticles(t.slug) : []
+    }))
   );
   return { categories, tools: withLinks };
 }
@@ -69,30 +49,33 @@ async function getToolDetail(slug, user) {
   assertLawyerPanel(user);
   const tool = getTool(slug);
   if (!tool) throw new AppError('ابزار یافت نشد', 404);
-  const { status, inactiveReason } = await resolveEffectiveStatus(tool);
-  const relatedArticles = status === 'ready' ? await getRelatedArticles(slug) : [];
+  const relatedArticles =
+    tool.status === 'ready' ? await getRelatedArticles(slug) : [];
   const relatedTools = [];
   if (relatedArticles.length) {
     relatedTools.push({ slug, title: tool.title });
   }
-  return { ...tool, status, inactiveReason, relatedArticles, relatedTools };
+  return { ...tool, relatedArticles, relatedTools };
 }
 
 async function runCalculation(slug, body, user) {
   assertLawyerPanel(user);
   const tool = getTool(slug);
   if (!tool) throw new AppError('ابزار یافت نشد', 404);
-  const { status } = await resolveEffectiveStatus(tool);
-  if (status !== 'ready') {
+  if (tool.status !== 'ready') {
     throw new AppError('این ابزار هنوز فعال نیست', 400, { code: 'TOOL_NOT_READY' });
   }
   const result = await calculators.calculate(slug, body);
   const relatedArticles = await getRelatedArticles(slug);
-  return {
+  const payload = {
     tool: { slug: tool.slug, title: tool.title, legalBasis: tool.legalBasis },
     result,
     relatedArticles
   };
+  if (slug === 'mehr-calc') {
+    payload.disclaimer = getMehrApiDisclaimer();
+  }
+  return payload;
 }
 
 module.exports = {

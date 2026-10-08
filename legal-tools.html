@@ -95,8 +95,9 @@ const TOOL_HINTS = {
     'فقط مهریه وجه رایج. شاخص‌های سالانه از داده ثبت‌شده در سامانه خوانده می‌شود؛ اگر سالی در سامانه نباشد، محاسبه انجام نمی‌شود.'
 };
 
-const MEHR_DISCLAIMER = 'این ابزار محاسبه‌ای کمکی است و جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست. محاسبه فقط بر اساس شاخص‌های رسمی واردشده در سامانه انجام می‌شود و در صورت نبود شاخص رسمی برای سال موردنیاز، نتیجه تخمینی ارائه نمی‌شود.';
-const MEHR_COVERAGE_FOOTNOTE = 'آخرین شاخص رسمی موجود در سامانه مربوط به سال ۱۴۰۱ است؛ بنابراین محاسبه برای سال مرجع تا ۱۴۰۲ امکان‌پذیر است. برای سال‌های بعد، پس از انتشار و ورود شاخص رسمی جدید، ابزار به‌روزرسانی می‌شود.';
+const MEHR_DISCLAIMER = 'این ابزار برای محاسبه کمکی مهریه وجه رایج بر اساس شاخص‌های رسمی واردشده در سامانه است و جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست.';
+const MEHR_NO_COIN = 'مهریه سکه و موضوع ضمانت اجرای ۱۱۰ سکه در این نسخه محاسبه نمی‌شود.';
+const MEHR_INDEX_EMPTY_MSG = 'برای سال‌های موردنیاز این محاسبه هنوز شاخص رسمی در سامانه ثبت نشده است.';
 
 const FORM_HTML = {
   'date-diff': `
@@ -122,7 +123,7 @@ const FORM_HTML = {
       <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>
     </div>`,
   'mehr-calc': `
-    <p class="tool-hint" id="mehr-coverage-notice">این ابزار در نسخه فعلی فقط با شاخص‌های رسمی موجود تا سال ۱۴۰۱ کار می‌کند و محاسبه را برای سال مرجع تا ۱۴۰۲ انجام می‌دهد.</p>
+    <p class="tool-hint" id="mehr-coverage-notice">فقط مهریه وجه رایج؛ محاسبه فقط برای سال‌هایی که شاخص رسمی آن‌ها در سامانه ثبت شده باشد.</p>
     <div class="fg"><label class="fl" for="in-mehr-amount">مبلغ مهریه</label><input class="fc" type="number" id="in-mehr-amount" min="0" step="any" required></div>
     <div class="fg"><label class="fl" for="in-mehr-currency">واحد</label>
       <select class="fc" id="in-mehr-currency"><option value="IRT">تومان</option><option value="IRR">ریال</option></select>
@@ -136,8 +137,8 @@ const FORM_HTML = {
       <div class="fg"><label class="fl" for="in-mehr-payment-year">سال پرداخت (شمسی)</label><input class="fc" type="number" id="in-mehr-payment-year" step="1" placeholder="اگر تاریخ ندارید"></div>
     </div>
     <div class="fg" id="mehr-death-fields" hidden><label class="fl" for="in-mehr-death-date">تاریخ فوت (شمسی YYYY-MM-DD)</label><input class="fc" type="text" id="in-mehr-death-date" placeholder="مثلاً 1402-06-15" pattern="\\d{4}-\\d{2}-\\d{2}"></div>
-    <p class="tool-hint" id="mehr-index-unavailable-text" hidden>شاخص رسمی مورد نیاز برای این سال هنوز در سامانه وارد نشده است.</p>
-    <p class="note">${MEHR_DISCLAIMER}</p>
+    <p class="tool-hint" id="mehr-index-unavailable-text" hidden>${MEHR_INDEX_EMPTY_MSG}</p>
+    <p class="note">${MEHR_DISCLAIMER} ${MEHR_NO_COIN}</p>
     <div class="form-actions">
       <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
       <button type="button" class="btn" onclick="resetTool()">پاک کردن</button>
@@ -203,20 +204,27 @@ function validateClient(slug) {
       throw new Error('مبلغ مهریه باید عدد مثبت باشد');
     }
     const currency = document.getElementById('in-mehr-currency').value;
-    const contractYear = parseIntField(document.getElementById('in-mehr-contract-year').value, 'سال وقوع عقد', 1315, 1401);
+    const contractYear = parseIntField(document.getElementById('in-mehr-contract-year').value, 'سال وقوع عقد', 1315, 1450);
     const basisType = document.getElementById('in-mehr-basis').value;
     const body = { amount: p, currency, contractYear, basisType };
     if (basisType === 'payment') {
       const pDate = document.getElementById('in-mehr-payment-date').value.trim();
       const pYearRaw = document.getElementById('in-mehr-payment-year').value;
-      if (pDate) {
+      const hasDate = pDate !== '';
+      const hasYear = pYearRaw !== '' && pYearRaw != null;
+      if (hasDate && hasYear) {
+        document.getElementById('in-mehr-payment-date').classList.add('invalid');
+        document.getElementById('in-mehr-payment-year').classList.add('invalid');
+        throw new Error('فقط یکی از تاریخ پرداخت یا سال پرداخت را وارد کنید');
+      }
+      if (hasDate) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(pDate)) {
           document.getElementById('in-mehr-payment-date').classList.add('invalid');
           throw new Error('تاریخ پرداخت باید به صورت YYYY-MM-DD باشد');
         }
         body.paymentDate = pDate;
-      } else if (pYearRaw !== '' && pYearRaw != null) {
-        body.paymentYear = parseIntField(pYearRaw, 'سال پرداخت', 1315, 1402);
+      } else if (hasYear) {
+        body.paymentYear = parseIntField(pYearRaw, 'سال پرداخت', 1315, 1450);
       } else {
         document.getElementById('in-mehr-payment-year').classList.add('invalid');
         throw new Error('سال پرداخت یا تاریخ پرداخت الزامی است');
@@ -238,8 +246,13 @@ function syncMehrBasisFields() {
   const basis = document.getElementById('in-mehr-basis');
   if (!basis) return;
   const isPay = basis.value === 'payment';
-  document.getElementById('mehr-payment-fields').hidden = !isPay;
-  document.getElementById('mehr-death-fields').hidden = isPay;
+  const payBlock = document.getElementById('mehr-payment-fields');
+  const deathBlock = document.getElementById('mehr-death-fields');
+  payBlock.hidden = !isPay;
+  deathBlock.hidden = isPay;
+  payBlock.querySelectorAll('input').forEach((el) => { el.disabled = !isPay; });
+  const deathInput = document.getElementById('in-mehr-death-date');
+  if (deathInput) deathInput.disabled = isPay;
 }
 
 function renderResultHtml(slug, r) {
@@ -269,22 +282,29 @@ function renderResultHtml(slug, r) {
     </dl><p class="note">${escapeHtml(r.note || r.disclaimer || '')}</p>`;
   }
   if (slug === 'mehr-calc') {
-    const impl = (r.implementationNotes || []).map(n => `<li>${escapeHtml(n)}</li>`).join('');
+    const basisLabel = r.paymentBasis === 'death' || r.basisType === 'death' ? 'فوت / ترکه' : 'تأدیه';
     const cov = r.coverage || {};
+    const covText =
+      cov.indexMinYear != null
+        ? `${fmtNum(cov.indexMinYear)} تا ${fmtNum(cov.indexMaxYear)} (${fmtNum(cov.indexedYearCount || 0)} سال)`
+        : '—';
     return `<dl id="mehr-result-container">
       <dt>مبلغ اولیه</dt><dd>${fmtNum(r.originalAmount)} ${escapeHtml(r.inputCurrency === 'IRT' ? 'تومان' : 'ریال')}</dd>
+      <dt>واحد ورودی</dt><dd>${escapeHtml(r.inputCurrency)}</dd>
       <dt>مبلغ (ریال)</dt><dd>${fmtNum(r.amountInRial)}</dd>
       <dt>سال عقد</dt><dd>${fmtNum(r.contractYear)}</dd>
+      <dt>مبنای محاسبه</dt><dd>${escapeHtml(basisLabel)}</dd>
+      <dt>سال شاخص صورت</dt><dd>${fmtNum(r.appliedIndexYearNumerator)}</dd>
       <dt>شاخص سال عقد</dt><dd>${fmtNum(r.contractIndex)} <span style="color:var(--muted)">(سال ${fmtNum(r.appliedIndexYearDenominator)})</span></dd>
       <dt>شاخص سال صورت</dt><dd>${fmtNum(r.paymentIndex)} <span style="color:var(--muted)">(سال ${fmtNum(r.appliedIndexYearNumerator)})</span></dd>
-      <dt>نتیجه (ریال)</dt><dd><strong>${fmtNum(r.calculatedAmount)}</strong></dd>
+      <dt>مبلغ نهایی (ریال)</dt><dd><strong>${fmtNum(r.calculatedAmount)}</strong></dd>
+      <dt>مبلغ دقیق (raw)</dt><dd>${fmtNum(r.calculatedAmountRaw)}</dd>
       <dt>فرمول</dt><dd>${escapeHtml(r.formula || '')}</dd>
+      <dt>گرد کردن</dt><dd>${escapeHtml(r.rounding?.note || r.rounding?.policy || '—')}</dd>
       <dt>نسخه dataset</dt><dd>${escapeHtml(r.indexDatasetVersion || '—')}</dd>
-      <dt>پوشش شاخص</dt><dd>${fmtNum(cov.indexMinYear)} تا ${fmtNum(cov.indexMaxYear)} — حداکثر سال مرجع ${fmtNum(cov.maxReferenceYear)}</dd>
+      <dt>پوشش شاخص در سامانه</dt><dd>${covText}</dd>
     </dl>
-    <p class="note">${escapeHtml(r.disclaimer || MEHR_DISCLAIMER)}</p>
-    <p class="note">${escapeHtml(MEHR_COVERAGE_FOOTNOTE)}</p>
-    ${impl ? `<ul class="note">${impl}</ul>` : ''}`;
+    <p class="note">${escapeHtml(r.disclaimer || MEHR_DISCLAIMER)} ${escapeHtml(MEHR_NO_COIN)}</p>`;
   }
   return escapeHtml(JSON.stringify(r, null, 2));
 }
@@ -389,7 +409,7 @@ async function runCalc() {
     const idxMsg = document.getElementById('mehr-index-unavailable-text');
     if (idxMsg) idxMsg.hidden = true;
     if (currentSlug === 'mehr-calc' && e.status === 422 && e.body?.details?.code === 'INDEX_NOT_AVAILABLE') {
-      el.textContent = e.body.error || 'شاخص رسمی مورد نیاز برای این محاسبه در سامانه موجود نیست.';
+      el.textContent = MEHR_INDEX_EMPTY_MSG;
       if (idxMsg) idxMsg.hidden = false;
     } else {
       el.textContent = e.message || 'خطا';

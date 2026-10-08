@@ -217,15 +217,15 @@ function runUiStaticTests() {
   assert('UI mehr death date', html.includes('id="in-mehr-death-date"'));
   assert('UI mehr payment fields', html.includes('id="mehr-payment-fields"'));
   assert('UI mehr death fields', html.includes('id="mehr-death-fields"'));
-  assert('UI mehr coverage notice', html.includes('id="mehr-coverage-notice"') && html.includes('۱۴۰۱'));
+  assert('UI mehr coverage notice', html.includes('id="mehr-coverage-notice"') && html.includes('وجه رایج'));
   assert('UI mehr payment date', html.includes('id="in-mehr-payment-date"'));
-  assert('UI mehr INDEX_NOT_AVAILABLE text', html.includes('شاخص رسمی مورد نیاز برای این سال هنوز در سامانه وارد نشده است.'));
+  assert('UI mehr INDEX_NOT_AVAILABLE text', html.includes('برای سال‌های موردنیاز این محاسبه هنوز شاخص رسمی در سامانه ثبت نشده است'));
   assert('UI mehr INDEX_NOT_AVAILABLE code', html.includes("INDEX_NOT_AVAILABLE"));
   assert('UI mehr result container', html.includes('id="mehr-result-container"'));
   assert('UI mehr disclaimer', html.includes('جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست'));
-  assert('UI mehr disclaimer no estimate', html.includes('نتیجه تخمینی ارائه نمی‌شود'));
+  assert('UI mehr coin disclaimer', html.includes('۱۱۰ سکه') && html.includes('محاسبه نمی‌شود'));
+  assert('UI mehr INDEX empty msg', html.includes('برای سال‌های موردنیاز این محاسبه هنوز شاخص رسمی در سامانه ثبت نشده است'));
   assert('UI no coin input field', !html.includes('in-mehr-coin'));
-  assert('UI no 110 coin text', !html.includes('۱۱۰ سکه') && !html.includes('110 سکه'));
   assert('UI basis tadieh label', html.includes('تأدیه'));
 }
 
@@ -332,8 +332,24 @@ async function main() {
       mehrOk.body.result?.calculatedAmount === 2_000_000 &&
       mehrOk.body.result?.formula === 'M × I_prev / I_contract' &&
       mehrOk.body.result?.paymentBasis === 'payment' &&
-      mehrOk.body.result?.indexDatasetVersion
+      mehrOk.body.result?.indexDatasetVersion &&
+      mehrOk.body.disclaimer?.includes('وجه رایج')
   );
+
+  const mehrPayConflict = await req(
+    'POST',
+    '/api/legal-tools/mehr-calc/calculate',
+    {
+      amount: 1_000_000,
+      currency: 'IRR',
+      contractYear: 1390,
+      basisType: 'payment',
+      paymentDate: '1400-06-15',
+      paymentYear: 1400
+    },
+    auth(lawyer.token)
+  );
+  assert('API mehr paymentDate+paymentYear conflict', mehrPayConflict.status === 400);
 
   const mehrDeath = await req(
     'POST',
@@ -453,9 +469,9 @@ async function main() {
   mehrIndexService.setStoreForTests(null);
   const catalogNoData = await req('GET', '/api/legal-tools', null, auth(lawyer.token));
   const mehrCat = (catalogNoData.body.tools || []).find((t) => t.slug === 'mehr-calc');
-  assert('catalog mehr-calc coming_soon without dataset', mehrCat?.status === 'coming_soon');
+  assert('catalog mehr-calc ready without dataset', mehrCat?.status === 'ready');
 
-  const mehrToolNotReady = await req(
+  const mehrNoIndex = await req(
     'POST',
     '/api/legal-tools/mehr-calc/calculate',
     {
@@ -468,8 +484,8 @@ async function main() {
     auth(lawyer.token)
   );
   assert(
-    'API mehr TOOL_NOT_READY without dataset',
-    mehrToolNotReady.status === 400 && mehrToolNotReady.body.details?.code === 'TOOL_NOT_READY'
+    'API mehr INDEX_NOT_AVAILABLE without dataset',
+    mehrNoIndex.status === 422 && mehrNoIndex.body.details?.code === 'INDEX_NOT_AVAILABLE'
   );
 
   const mehrEmptyDb = await req(
@@ -485,8 +501,8 @@ async function main() {
     auth(lawyer.token)
   );
   assert(
-    'API mehr empty store TOOL_NOT_READY',
-    mehrEmptyDb.status === 400 && mehrEmptyDb.body.details?.code === 'TOOL_NOT_READY'
+    'API mehr empty store INDEX_NOT_AVAILABLE',
+    mehrEmptyDb.status === 422 && mehrEmptyDb.body.details?.code === 'INDEX_NOT_AVAILABLE'
   );
   mehrIndexService.resetStoreCache();
   await seedTestMehrIndices(db);

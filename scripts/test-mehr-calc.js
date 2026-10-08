@@ -84,12 +84,15 @@ async function seedTestMehrIndices(knex) {
 
 function runUiStaticTests() {
   const html = fs.readFileSync(path.join(root, 'legal-tools.html'), 'utf8');
-  assert('UI coverage notice 1401', html.includes('id="mehr-coverage-notice"') && html.includes('تا سال ۱۴۰۱'));
+  assert('UI coverage notice', html.includes('id="mehr-coverage-notice"') && html.includes('وجه رایج'));
   assert('UI payment date field', html.includes('id="in-mehr-payment-date"'));
   assert('UI INDEX_NOT_AVAILABLE handler', html.includes("details?.code === 'INDEX_NOT_AVAILABLE'"));
   assert('UI result amountInRial', html.includes('r.amountInRial'));
   assert('UI appliedIndexYearNumerator', html.includes('appliedIndexYearNumerator'));
-  assert('UI disclaimer no estimate', html.includes('نتیجه تخمینی ارائه نمی‌شود'));
+  assert('UI coin disclaimer', html.includes('۱۱۰ سکه') && html.includes('محاسبه نمی‌شود'));
+  assert('UI payment conflict validation', html.includes('فقط یکی از تاریخ پرداخت یا سال پرداخت'));
+  assert('UI basis sync disable', html.includes('el.disabled = !isPay'));
+  assert('UI INDEX empty message', html.includes('برای سال‌های موردنیاز این محاسبه هنوز شاخص رسمی در سامانه ثبت نشده است'));
   assert('UI mobile media query', html.includes('@media(max-width:640px)'));
   assert('UI no coin input field', !html.includes('in-mehr-coin'));
 }
@@ -111,7 +114,7 @@ async function runApiTests(port, token) {
   );
   assert(
     'API successful calculate 200',
-    ok.status === 200 && ok.body.result?.calculatedAmount === 2_000_000 && ok.body.result?.coverage?.indexMaxYear === 1401
+    ok.status === 200 && ok.body.result?.calculatedAmount === 2_000_000 && ok.body.result?.indexDatasetVersion
   );
 
   const bad422 = await req(
@@ -136,12 +139,39 @@ async function runApiTests(port, token) {
 
   const detail = await req(port, 'GET', '/api/legal-tools/mehr-calc', null, auth);
   assert('GET detail mehr-calc', detail.status === 200 && detail.body.slug === 'mehr-calc');
+
+  const conflict = await req(
+    port,
+    'POST',
+    '/api/legal-tools/mehr-calc/calculate',
+    {
+      amount: 1_000_000,
+      currency: 'IRR',
+      contractYear: 1390,
+      basisType: 'payment',
+      paymentDate: '1400-01-01',
+      paymentYear: 1400
+    },
+    auth
+  );
+  assert('API paymentDate+paymentYear 400', conflict.status === 400);
+
+  assert(
+    'API disclaimer envelope',
+    ok.body.disclaimer?.includes('وجه رایج') && ok.body.disclaimer?.includes('۱۱۰ سکه')
+  );
+  assert(
+    'API rounding metadata',
+    ok.body.result?.rounding?.policy === 'no_official_statutory_rounding' &&
+      ok.body.result?.calculatedAmountRaw != null
+  );
 }
 
 async function main() {
   console.log('--- fixture + pure ---');
   execSync('node scripts/test-mehr-index-fixture.js', { cwd: root, stdio: 'inherit' });
   execSync('node scripts/test-mehr-calc-pure.js', { cwd: root, stdio: 'inherit' });
+  execSync('node scripts/test-mehr-ingest.js', { cwd: root, stdio: 'inherit' });
 
   runUiStaticTests();
 

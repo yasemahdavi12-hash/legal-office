@@ -1,6 +1,5 @@
 /**
  * Tool catalog — status "ready" only when backend calculator exists and does not rely on unverified legal rates.
- * mehr-calc effective status also depends on official index dataset (see legalTools.service).
  */
 const INACTIVE_MSG = 'پس از ورود منبع رسمی و قابل اعتبارسنجی فعال می‌شود.';
 
@@ -45,7 +44,7 @@ const TOOLS = Object.freeze([
     category: 'family',
     status: 'ready',
     description:
-      'مهریه وجه رایج بر اساس شاخص‌های سالانه رسمی ثبت‌شده در سامانه (بانک مرکزی تا سال شاخص ۱۴۰۱).'
+      'محاسبه کمکی مهریه وجه رایج بر اساس شاخص‌های سالانه واردشده در سامانه (فقط وجه رایج؛ بدون سکه و طلا).'
   },
   {
     slug: 'court-fees',

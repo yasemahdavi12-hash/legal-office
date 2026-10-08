@@ -8,7 +8,7 @@ const {
   roundCalculatedAmount,
   parsePositiveAmount
 } = require('../src/services/legalTools/mehrIndex/calculatePure');
-const { MIN_YEAR, MAX_YEAR, MAX_REFERENCE_YEAR } = require('../src/services/legalTools/mehrIndex/constants');
+const { MIN_YEAR, MAX_YEAR } = require('../src/services/legalTools/mehrIndex/constants');
 
 const testStore = loadTestFixtureStore();
 const auditStore = loadAuditFixtureStore();
@@ -72,7 +72,7 @@ assert(
   sameYear.appliedIndexYearNumerator === 1399 && sameYear.calculatedAmount === 40_000_000,
   String(sameYear.calculatedAmount)
 );
-assert('coverage maxReferenceYear', normal.coverage?.maxReferenceYear === MAX_REFERENCE_YEAR);
+assert('coverage indexed years', normal.coverage?.indexedYearCount === testStore.yearToIndex.size);
 
 const toman = calculateMehrPure(
   {
@@ -124,7 +124,32 @@ const death = calculateMehrPure(
 );
 assert('death basis', death.referenceYear === 1400 && death.calculatedAmount === 2_000_000);
 
-assert('deterministic rounding', roundCalculatedAmount(1.4) === 1 && roundCalculatedAmount(1.6) === 2);
+assert('deterministic rounding helper', roundCalculatedAmount(1.4) === 1 && roundCalculatedAmount(1.6) === 2);
+
+const fracStore = new MehrIndexStore(
+  new Map([
+    [1390, 100],
+    [1399, 150]
+  ]),
+  []
+);
+const frac = calculateMehrPure(
+  {
+    amount: 1_000_001,
+    currency: 'IRR',
+    contractYear: 1390,
+    basisType: 'payment',
+    paymentYear: 1400
+  },
+  fracStore,
+  'frac-test'
+);
+assert(
+  'fractional raw preserved',
+  frac.calculatedAmountRaw === 1_500_001.5 && frac.calculatedAmount === 1_500_001.5,
+  String(frac.calculatedAmountRaw)
+);
+assert('rounding metadata object', frac.rounding?.policy === 'no_official_statutory_rounding');
 
 expectValidation('zero amount', () =>
   calculateMehrPure(
@@ -197,6 +222,20 @@ expectIndexMissing('missing numerator index paymentYear 1403', () =>
   )
 );
 
+expectValidation('paymentDate and paymentYear conflict', () =>
+  calculateMehrPure(
+    {
+      amount: 1,
+      currency: 'IRR',
+      contractYear: 1390,
+      basisType: 'payment',
+      paymentDate: '1400-01-01',
+      paymentYear: 1400
+    },
+    testStore
+  )
+);
+
 expectValidation('death with paymentYear rejected', () =>
   calculateMehrPure(
     {
@@ -233,6 +272,19 @@ expectIndexMissing('paymentYear 1403 INDEX_NOT_AVAILABLE', () =>
       paymentYear: 1403
     },
     auditStore
+  )
+);
+
+expectIndexMissing('unsupported future index paymentYear 1405', () =>
+  calculateMehrPure(
+    {
+      amount: 10_000_000,
+      currency: 'IRR',
+      contractYear: 1400,
+      basisType: 'payment',
+      paymentYear: 1405
+    },
+    testStore
   )
 );
 

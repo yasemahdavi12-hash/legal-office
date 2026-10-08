@@ -1,19 +1,25 @@
 const { AppError } = require('../../../utils/response');
-const {
-  MIN_YEAR,
-  MAX_YEAR,
-  MAX_REFERENCE_YEAR,
-  INDEX_NOT_AVAILABLE_MESSAGE
-} = require('./constants');
+const { MIN_YEAR, INDEX_NOT_AVAILABLE_MESSAGE } = require('./constants');
 const { parseJalaliDateYm } = require('./parseJalaliDateYm');
 
 const MAX_AMOUNT_IRR = Number.MAX_SAFE_INTEGER;
 const FORMULA = 'M × I_prev / I_contract';
 const FORMULA_FA = 'مبلغ × شاخص سال قبل از سال مرجع ÷ شاخص سال عقد';
 const MEHR_DISCLAIMER =
-  'این ابزار محاسبه‌ای کمکی است و جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست. محاسبه فقط بر اساس شاخص‌های رسمی واردشده در سامانه انجام می‌شود و در صورت نبود شاخص رسمی برای سال موردنیاز، نتیجه تخمینی ارائه نمی‌شود.';
+  'این ابزار برای محاسبه کمکی مهریه وجه رایج بر اساس شاخص‌های رسمی واردشده در سامانه است و جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست.';
+const MEHR_DISCLAIMER_SCOPE =
+  'مهریه سکه و موضوع ضمانت اجرای ۱۱۰ سکه در این نسخه محاسبه نمی‌شود.';
 const DEATH_BASIS_NOTE =
-  'مبنای فوت/ترکه: شاخص صورت = شاخص سال قبل از سال فوت (deathYear − 1) مطابق پیاده‌سازی ماده ۳ آیین‌نامه (تأیید نهایی با مرجع قضایی).';
+  'مبنای فوت/ترکه: شاخص صورت = شاخص سال قبل از سال فوت (deathCalendarYear − 1)؛ منطق ماده ۳ آیین‌نامه — تأیید نهایی با مرجع قضایی.';
+
+const ROUNDING_METADATA = Object.freeze({
+  policy: 'no_official_statutory_rounding',
+  indicesUnrounded: true,
+  intermediateUnrounded: true,
+  amountField: 'calculatedAmount',
+  note:
+    'رویه رسمی واحد/گرد کردن مبلغ نهایی مهریه در این پیاده‌سازی یافت نشد؛ مبلغ خروجی همان حاصل دقیق ضرب/تقسیم بر شاخص‌های ذخیره‌شده است (ریال).'
+});
 
 function indexNotAvailable(missingYears) {
   throw new AppError(INDEX_NOT_AVAILABLE_MESSAGE, 422, {
@@ -44,10 +50,12 @@ function parsePositiveAmount(amount, currency) {
   return { originalAmount: n, inputCurrency: cur, amountInRial };
 }
 
+const CONTRACT_YEAR_MAX = 1450;
+
 function parseContractYear(raw) {
   const y = parseJalaliYear(raw, 'سال وقوع عقد');
-  if (y < MIN_YEAR || y > MAX_YEAR) {
-    throw new AppError(`سال وقوع عقد باید بین ${MIN_YEAR} و ${MAX_YEAR} باشد`, 400);
+  if (y < MIN_YEAR || y > CONTRACT_YEAR_MAX) {
+    throw new AppError(`سال وقوع عقد باید بین ${MIN_YEAR} و ${CONTRACT_YEAR_MAX} باشد`, 400);
   }
   return y;
 }
@@ -67,19 +75,21 @@ function resolveReferencePayment(body) {
   if (body.deathDate != null && body.deathDate !== '') {
     throw new AppError('در مبنای پرداخت، deathDate مجاز نیست', 400);
   }
+  const hasDate = body.paymentDate != null && String(body.paymentDate).trim() !== '';
+  const hasYear = body.paymentYear != null && body.paymentYear !== '';
+  if (hasDate && hasYear) {
+    throw new AppError('فقط یکی از paymentDate یا paymentYear مجاز است', 400);
+  }
   let paymentDate = null;
   let paymentYear = null;
-  if (body.paymentDate != null && String(body.paymentDate).trim() !== '') {
+  if (hasDate) {
     const parsed = parseJalaliDateYm(body.paymentDate, 'تاریخ پرداخت');
     paymentDate = parsed.date;
     paymentYear = parsed.year;
-  } else if (body.paymentYear != null && body.paymentYear !== '') {
+  } else if (hasYear) {
     paymentYear = parseJalaliYear(body.paymentYear, 'سال پرداخت');
   } else {
     throw new AppError('سال پرداخت یا تاریخ پرداخت الزامی است', 400);
-  }
-  if (paymentYear > MAX_REFERENCE_YEAR) {
-    indexNotAvailable([paymentYear - 1]);
   }
   return { paymentDate, paymentYear, referenceYear: paymentYear };
 }
@@ -93,9 +103,6 @@ function resolveReferenceDeath(body) {
   }
   const parsed = parseJalaliDateYm(body.deathDate, 'تاریخ فوت');
   const deathYear = parsed.year;
-  if (deathYear > MAX_REFERENCE_YEAR) {
-    indexNotAvailable([deathYear - 1]);
-  }
   return { deathDate: parsed.date, deathYear, referenceYear: deathYear };
 }
 
@@ -117,6 +124,19 @@ function resolveIndices(indexStore, contractYear, indexYearNumerator) {
     throw new AppError('داده شاخص نامعتبر است', 500, { code: 'INDEX_DATA_INTEGRITY' });
   }
   return { contractIndex, paymentIndex };
+}
+
+function buildCoverage(indexStore) {
+  const years = indexStore?.yearToIndex ? [...indexStore.yearToIndex.keys()] : [];
+  if (!years.length) {
+    return { indexMinYear: null, indexMaxYear: null, indexedYearCount: 0 };
+  }
+  years.sort((a, b) => a - b);
+  return {
+    indexMinYear: years[0],
+    indexMaxYear: years[years.length - 1],
+    indexedYearCount: years.length
+  };
 }
 
 function roundCalculatedAmount(raw) {
@@ -170,7 +190,7 @@ function calculateMehrPure(input, indexStore, datasetVersion = null) {
   if (!Number.isFinite(calculatedAmountRaw) || calculatedAmountRaw > MAX_AMOUNT_IRR) {
     throw new AppError('مبلغ محاسبه‌شده خارج از محدوده مجاز است', 400);
   }
-  const calculatedAmount = roundCalculatedAmount(calculatedAmountRaw);
+  const calculatedAmount = calculatedAmountRaw;
 
   const indexDatasetVersion =
     datasetVersion ||
@@ -200,18 +220,18 @@ function calculateMehrPure(input, indexStore, datasetVersion = null) {
     paymentIndex,
     calculatedAmount,
     calculatedAmountRaw,
-    rounding: 'integer_rial',
+    rounding: { ...ROUNDING_METADATA },
     formula: FORMULA,
     formulaFa: FORMULA_FA,
     indexDatasetVersion,
-    coverage: {
-      indexMinYear: MIN_YEAR,
-      indexMaxYear: MAX_YEAR,
-      maxReferenceYear: MAX_REFERENCE_YEAR
-    },
-    disclaimer: MEHR_DISCLAIMER,
+    coverage: buildCoverage(indexStore),
+    disclaimer: `${MEHR_DISCLAIMER} ${MEHR_DISCLAIMER_SCOPE}`,
     implementationNotes
   };
+}
+
+function getMehrApiDisclaimer() {
+  return `${MEHR_DISCLAIMER} ${MEHR_DISCLAIMER_SCOPE}`;
 }
 
 module.exports = {
@@ -220,6 +240,9 @@ module.exports = {
   parseJalaliYear,
   parseContractYear,
   roundCalculatedAmount,
+  getMehrApiDisclaimer,
+  MEHR_DISCLAIMER,
+  MEHR_DISCLAIMER_SCOPE,
   FORMULA,
   FORMULA_FA,
   indexNotAvailable

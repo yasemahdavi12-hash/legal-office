@@ -1,11 +1,19 @@
 /**
- * Official mehrieh annual index rows (CBI 10899/02, jalali years 1315–1401).
- * Source file: scripts/fixtures/mehr-index-audit.json — not test fixture.
+ * Official mehrieh annual indices — optional bulk ingest.
+ * Default: skip (table may stay empty; calculator returns INDEX_NOT_AVAILABLE).
+ * Full verified table: MEHR_SEED_OFFICIAL_INDICES=1 npm run seed
  */
 const fs = require('fs');
 const path = require('path');
 
 exports.seed = async function seed(knex) {
+  if (process.env.MEHR_SEED_OFFICIAL_INDICES !== '1') {
+    console.warn(
+      '[seed] 002_legal_annual_indices_official skipped (set MEHR_SEED_OFFICIAL_INDICES=1 to ingest audit JSON)'
+    );
+    return;
+  }
+
   const fixturePath = path.join(__dirname, '../../scripts/fixtures/mehr-index-audit.json');
   if (!fs.existsSync(fixturePath)) {
     console.warn('[seed] mehr-index-audit.json missing — skip legal_annual_indices');
