@@ -9,6 +9,18 @@ const CASE_STATUS = [
 const TASK_STATUS = ['todo', 'doing', 'done'];
 const TASK_PRIORITY = ['high', 'med', 'low'];
 const NOTE_CAT = ['general', 'hearing', 'client', 'legal', 'followup'];
+const TEMPLATE_CAT = [
+  'pleading',
+  'petition',
+  'declaration',
+  'contract',
+  'court_request',
+  'office',
+  'power_of_attorney',
+  'letter',
+  'other'
+];
+const templateIdParam = { id: { in: 'params', required: true, trim: true, minLength: 1, maxLength: 128 } };
 const DOC_CAT = ['other', 'contract', 'client', 'pdf', 'image', 'legal', 'identity', 'financial', 'court'];
 const EVENT_TYPE = [
   // legacy
@@ -210,11 +222,64 @@ const communications = {
   disconnect: validate({
     platform: { required: true, enum: PLATFORMS }
   }),
-  send: validate({
-    platform: { required: true, enum: PLATFORMS },
-    text: { trim: true, maxLength: 4000 },
-    message: { trim: true, maxLength: 4000 }
+  send: validate(
+    {
+      platform: { required: true, enum: PLATFORMS },
+      text: { trim: true, maxLength: 4096 },
+      message: { trim: true, maxLength: 4096 },
+      target: { trim: true, maxLength: 128 },
+      chat_id: { trim: true, maxLength: 128 }
+    },
+    { requireAny: [['text', 'message']] }
+  )
+};
+
+const templates = {
+  listQuery: validate({
+    category: { in: 'query', enum: TEMPLATE_CAT },
+    cat: { in: 'query', enum: TEMPLATE_CAT },
+    scope: { in: 'query', trim: true, maxLength: 16 },
+    q: { in: 'query', trim: true, maxLength: 120 },
+    search: { in: 'query', trim: true, maxLength: 120 }
+  }),
+  preview: validate({
+    body: { trim: true, maxLength: 50000 },
+    content: { trim: true, maxLength: 50000 },
+    text: { trim: true, maxLength: 50000 },
+    case_id: { type: 'id' },
+    caseId: { type: 'id' }
+  }),
+  create: validate({
+    title: { required: true, trim: true, minLength: 1, maxLength: 255 },
+    body: { trim: true, maxLength: 50000 },
+    content: { trim: true, maxLength: 50000 },
+    text: { trim: true, maxLength: 50000 },
+    category: { enum: TEMPLATE_CAT },
+    cat: { enum: TEMPLATE_CAT }
+  }),
+  update: validate({
+    ...templateIdParam,
+    title: { required: true, trim: true, minLength: 1, maxLength: 255 },
+    body: { trim: true, maxLength: 50000 },
+    content: { trim: true, maxLength: 50000 },
+    text: { trim: true, maxLength: 50000 },
+    category: { enum: TEMPLATE_CAT },
+    cat: { enum: TEMPLATE_CAT }
+  }),
+  id: validate(templateIdParam)
+};
+
+const baleInbox = {
+  messagesQuery: validate({
+    page: { in: 'query', type: 'int', min: 1 },
+    limit: { in: 'query', type: 'int', min: 1, max: 100 },
+    chat_id: { in: 'query', trim: true, maxLength: 128 }
+  }),
+  markRead: validate({ ...idParam }),
+  reply: validate({
+    chat_id: { required: true, trim: true, maxLength: 128 },
+    text: { required: true, trim: true, maxLength: 4096 }
   })
 };
 
-module.exports = { cases, clients, tasks, notes, documents, events, communications };
+module.exports = { cases, clients, tasks, notes, documents, events, communications, templates, baleInbox };

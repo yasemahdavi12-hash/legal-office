@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0f2540">
-<title>ورود | قانون در جیب شما</title>
+<title>ورود | دادبان</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#0f2540;--pl:#1e4a7a;--bg:#eef2f6;--text:#1a2332;--muted:#64748b;--border:#d8e0ea;--danger:#b91c1c;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
@@ -37,7 +37,7 @@ button{cursor:pointer}
     <div class="fg"><label class="fl" for="login-email">ایمیل</label><input class="fc" id="login-email" type="email" autocomplete="username"></div>
     <div class="fg"><label class="fl" for="login-pass">رمز عبور</label><input class="fc" id="login-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button type="button" class="btn btn-p" id="btn-login" onclick="doLogin()">ورود</button>
-    <button type="button" class="btn btn-o" onclick="location.href='/?lawyer_register=1'">ثبت‌نام وکیل / پیش‌نمایش</button>
+    <button type="button" class="btn btn-o" onclick="location.href='/app?lawyer_register=1'">ثبت‌نام وکیل / پیش‌نمایش</button>
   </div>
   <div id="step-mfa" style="display:none">
     <p class="hint">کد تأیید دو مرحله‌ای را وارد کنید</p>
@@ -57,7 +57,7 @@ button{cursor:pointer}
     ·
     <a href="/portal">پورتال موکل</a>
     ·
-    <a href="/?lawyer_register=1">ثبت‌نام وکیل</a>
+    <a href="/app?lawyer_register=1">ثبت‌نام وکیل</a>
     ·
     <a href="/login?next=/admin">ورود مدیر</a>
   </div>
@@ -145,7 +145,7 @@ function navTo(url) {
 function homeForRole(role) {
   if (role === 'client') return '/portal';
   if (role === 'admin') return '/admin';
-  return '/';
+  return '/app';
 }
 function redirectForRole(user) {
   const role = user && user.role;
@@ -162,11 +162,11 @@ function redirectForRole(user) {
     return;
   }
   if (role === 'lawyer') {
-    const dest = NEXT && !NEXT.startsWith('/portal') && NEXT !== '/login' ? NEXT : '/';
+    const dest = NEXT && !NEXT.startsWith('/portal') && NEXT !== '/login' ? NEXT : '/app';
     navTo(dest);
     return;
   }
-  navTo('/');
+  navTo('/app');
 }
 function clearStoredAuth() {
   localStorage.removeItem('legal_token');

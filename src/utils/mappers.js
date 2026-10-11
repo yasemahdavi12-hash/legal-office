@@ -176,6 +176,30 @@ function mapUserOut(row) {
   };
 }
 
+function mapTemplateOut(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    content: row.body,
+    text: row.body,
+    category: row.category,
+    cat: row.category,
+    isSystem: !!row.is_system,
+    is_system: !!row.is_system,
+    systemSlug: row.system_slug || null,
+    system_slug: row.system_slug || null,
+    usageNotes: row.usage_notes || null,
+    usage_notes: row.usage_notes || null,
+    sourceTemplateId: row.source_template_id || null,
+    created_at: row.created_at,
+    createdAt: row.created_at,
+    updated_at: row.updated_at,
+    updatedAt: row.updated_at
+  };
+}
+
 module.exports = {
   CASE_STATUS_DB,
   toCaseStatusDb,
@@ -183,6 +207,7 @@ module.exports = {
   mapClientOut,
   mapTaskOut,
   mapNoteOut,
+  mapTemplateOut,
   mapDocumentOut,
   mapEventOut,
   mapUserOut

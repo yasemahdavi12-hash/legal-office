@@ -222,6 +222,17 @@ module.exports = {
     softDeleteRetentionDays: Number(process.env.DOCUMENT_SOFT_DELETE_RETENTION_DAYS || 30)
   },
   /** AI assistant — disabled unless AI_ENABLED=true and AI_API_KEY set. Never crash on missing key. */
+  /** Bale inbound: webhook on HTTPS production; optional getUpdates polling for local dev. */
+  bale: {
+    inboundPolling: (() => {
+      const raw = String(process.env.BALE_INBOUND_POLLING || '').toLowerCase();
+      if (raw === 'true') return true;
+      if (raw === 'false') return false;
+      return !isProd;
+    })(),
+    pollIntervalMs: Number(process.env.BALE_INBOUND_POLL_MS || 20_000),
+    webhookAutoRegister: String(process.env.BALE_WEBHOOK_AUTO_REGISTER || 'true').toLowerCase() !== 'false'
+  },
   ai: {
     enabled: String(process.env.AI_ENABLED || 'false').toLowerCase() === 'true',
     apiKey: (process.env.AI_API_KEY || '').trim(),

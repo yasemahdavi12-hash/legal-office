@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0f2540">
-<title>قوانین و مقررات | قانون در جیب شما</title>
+<title>قوانین و مقررات | دادبان</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#0f2540;--pl:#1e4a7a;--bg:#eef2f6;--text:#1a2332;--muted:#64748b;--border:#d8e0ea;--r:10px;--shadow:0 1px 3px rgba(15,37,64,.08);--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
@@ -35,6 +35,9 @@ a{color:var(--pl);text-decoration:none;font-weight:600}
 .empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px}
 .view{display:none}
 .view.show{display:block}
+.article-pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:16px 0 8px;padding:12px;border:1px solid var(--border);border-radius:8px;background:#f8fafc;font-size:13px}
+.article-pager .pager-info{color:var(--muted);font-size:12px}
+.article-pager .pager-page{font-weight:700;color:var(--primary);min-width:2em;text-align:center}
 </style>
 </head>
 <body>
@@ -42,7 +45,7 @@ a{color:var(--pl);text-decoration:none;font-weight:600}
   <div class="top">
     <h1>📚 قوانین و مقررات</h1>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <a class="btn" href="/">← داشبورد</a>
+      <a class="btn" href="/app">← داشبورد</a>
       <a class="btn" href="/legal-tools">⚖️ ابزارها</a>
     </div>
   </div>
@@ -67,6 +70,7 @@ a{color:var(--pl);text-decoration:none;font-weight:600}
     <div class="meta" id="law-meta"></div>
     <input class="search" id="q-law" placeholder="جستجو داخل این قانون…">
     <div id="article-list"></div>
+    <div id="article-pagination" class="article-pager" hidden></div>
   </div>
 
   <div id="view-article" class="view card">
@@ -92,6 +96,74 @@ let laws = [];
 let currentLawId = null;
 let currentArticle = null;
 let activeCategory = '';
+let articlePage = 1;
+const ARTICLE_PAGE_SIZE = 50;
+let lastArticlePagination = null;
+
+const CATEGORY_PRESENTATION = {
+  civil: 'حقوق مدنی',
+  ipc: 'قانون مجازات اسلامی',
+  civil_procedure: 'آیین دادرسی مدنی',
+  criminal_procedure: 'آیین دادرسی کیفری',
+  commerce: 'قانون تجارت',
+  registration: 'ثبت اسناد و املاک',
+  family: 'قوانین خانواده',
+  labor: 'قانون کار',
+  social_security: 'تأمین اجتماعی',
+  tax: 'قوانین مالیاتی',
+  cheque: 'قوانین چک',
+  companies: 'قوانین شرکت‌ها',
+  bar: 'قوانین وکالت',
+  cyber: 'جرایم رایانه‌ای',
+  administrative_justice: 'دیوان عدالت اداری',
+  property: 'املاک و شهرداری',
+  other: 'سایر'
+};
+
+const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+
+function toPersianDigits(n) {
+  return String(n).replace(/\d/g, (d) => PERSIAN_DIGITS[Number(d)]);
+}
+
+/** Presentation only — canonical article_number unchanged in API/DB. */
+function formatArticleLabel(articleNumber) {
+  const s = String(articleNumber || '');
+  const structural = s.match(/^(B\d{2}(?:-F\d{2})?-)/);
+  const core = structural ? s.slice(structural[1].length) : s;
+  const prefixTag = structural ? structural[1].replace(/-$/, ' ') : '';
+
+  const eslahi = core.match(/^0*(\d+)-e(\d+)$/);
+  if (eslahi) {
+    const label = `ماده ${toPersianDigits(eslahi[1])} (اصلاحی)`;
+    return prefixTag ? `${prefixTag}· ${label}` : label;
+  }
+  const note = core.match(/^0*(\d+)-n(\d+)$/);
+  if (note) {
+    const base = Number.parseInt(note[1], 10);
+    const idx = Number.parseInt(note[2], 10);
+    const label = `تبصره ${toPersianDigits(idx)} ماده ${toPersianDigits(base)}`;
+    return prefixTag ? `${prefixTag}· ${label}` : label;
+  }
+  const rep = core.match(/^0*(\d+)-r(\d+)$/);
+  if (rep) {
+    const base = Number.parseInt(rep[1], 10);
+    const label = `ماده ${toPersianDigits(base)} مکرر`;
+    return prefixTag ? `${prefixTag}· ${label}` : label;
+  }
+  const main = core.match(/^0*(\d+)$/);
+  if (main) {
+    const label = `ماده ${toPersianDigits(main[1])}`;
+    return prefixTag ? `${prefixTag}· ${label}` : label;
+  }
+  return prefixTag ? `${prefixTag}· ${core}` : `ماده ${s}`;
+}
+
+function formatLawSubtitle(law) {
+  const d = law.description && String(law.description).trim();
+  if (d && !/^dadbane:lawKey=/.test(d)) return d;
+  return CATEGORY_PRESENTATION[law.category] || law.category || '';
+}
 
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('show'));
@@ -127,7 +199,7 @@ async function loadLaws() {
   list.innerHTML = laws.map(l => `
     <div class="law-row" data-id="${l.id}">
       <h3>${escapeHtml(l.title)}</h3>
-      <p>${escapeHtml(l.description || l.category || '')}</p>
+      <p>${escapeHtml(formatLawSubtitle(l))}</p>
     </div>`).join('');
   list.querySelectorAll('.law-row').forEach(row => {
     row.onclick = () => openLaw(Number(row.dataset.id));
@@ -145,7 +217,7 @@ async function runSearch() {
   }
   box.innerHTML = '<h3 style="font-size:13px;margin:8px 0">نتایج جستجو</h3>' + hits.map(h => `
     <div class="article-item" data-aid="${h.id}">
-      <strong>${escapeHtml(h.lawTitle)} — ماده ${escapeHtml(h.articleNumber)}</strong>
+      <strong>${escapeHtml(h.lawTitle)} — ${escapeHtml(formatArticleLabel(h.articleNumber))}</strong>
       <div style="font-size:12px;color:var(--muted)">${escapeHtml(h.excerpt || '')}</div>
     </div>`).join('');
   box.querySelectorAll('.article-item').forEach(el => {
@@ -162,7 +234,7 @@ async function loadSaved() {
   }
   el.innerHTML = rows.map(r => `
     <div class="article-item" data-aid="${r.articleId}">
-      ${escapeHtml(r.lawTitle)} — ماده ${escapeHtml(r.article_number || r.articleNumber)}
+      ${escapeHtml(r.lawTitle)} — ${escapeHtml(formatArticleLabel(r.article_number || r.articleNumber))}
     </div>`).join('');
   el.querySelectorAll('.article-item').forEach(item => {
     item.onclick = () => openArticle(Number(item.dataset.aid));
@@ -171,20 +243,60 @@ async function loadSaved() {
 
 async function openLaw(id) {
   currentLawId = id;
+  articlePage = 1;
+  document.getElementById('q-law').value = '';
   const law = await api('GET', '/laws/' + id);
   showView('view-law');
   document.getElementById('law-title').textContent = law.title;
   document.getElementById('law-meta').textContent = [
-    law.category, law.approvalDate, law.source
+    CATEGORY_PRESENTATION[law.category] || law.category,
+    law.approvalDate,
+    law.source
   ].filter(Boolean).join(' · ');
   location.hash = 'law/' + id;
   await refreshArticles();
 }
 
+function renderArticlePagination(pagination) {
+  const bar = document.getElementById('article-pagination');
+  if (!pagination || !pagination.total) {
+    bar.hidden = true;
+    bar.innerHTML = '';
+    return;
+  }
+  bar.hidden = false;
+  const { page, total, totalPages, hasPrev, hasNext } = pagination;
+  bar.innerHTML = `
+    <button type="button" class="btn btn-sm" id="pager-prev" ${hasPrev ? '' : 'disabled'}>قبلی</button>
+    <span class="pager-page">${toPersianDigits(page)}</span>
+    <span class="pager-info">از ${toPersianDigits(totalPages)} — ${toPersianDigits(total)} ماده</span>
+    <button type="button" class="btn btn-sm" id="pager-next" ${hasNext ? '' : 'disabled'}>بعدی</button>`;
+  document.getElementById('pager-prev').onclick = () => {
+    if (articlePage > 1) {
+      articlePage -= 1;
+      refreshArticles();
+    }
+  };
+  document.getElementById('pager-next').onclick = () => {
+    if (articlePage < totalPages) {
+      articlePage += 1;
+      refreshArticles();
+    }
+  };
+}
+
 async function refreshArticles() {
   const q = document.getElementById('q-law').value.trim();
-  const params = q ? '?q=' + encodeURIComponent(q) : '';
-  const articles = await api('GET', '/laws/' + currentLawId + '/articles' + params);
+  const params = new URLSearchParams({
+    page: String(articlePage),
+    limit: String(ARTICLE_PAGE_SIZE)
+  });
+  if (q) params.set('q', q);
+  const res = await api('GET', '/laws/' + currentLawId + '/articles?' + params);
+  const articles = res.items || [];
+  lastArticlePagination = res.pagination || null;
+  if (res.pagination && res.pagination.page) articlePage = res.pagination.page;
+  renderArticlePagination(lastArticlePagination);
   const list = document.getElementById('article-list');
   if (!articles.length) {
     list.innerHTML = '<div class="empty">ماده‌ای ثبت نشده است.</div>';
@@ -192,8 +304,9 @@ async function refreshArticles() {
   }
   list.innerHTML = articles.map(a => `
     <div class="article-item" data-aid="${a.id}">
-      <strong>ماده ${escapeHtml(a.articleNumber)}</strong>
+      <strong>${escapeHtml(formatArticleLabel(a.articleNumber))}</strong>
       ${a.title ? ' — ' + escapeHtml(a.title) : ''}
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">${escapeHtml(a.articleNumber)}</div>
       <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.excerpt || '')}</div>
     </div>`).join('');
   list.querySelectorAll('.article-item').forEach(el => {
@@ -207,7 +320,7 @@ async function openArticle(id) {
   currentLawId = art.lawId;
   showView('view-article');
   document.getElementById('art-title').textContent =
-    (art.law && art.law.title ? art.law.title + ' — ' : '') + 'ماده ' + art.articleNumber;
+    (art.law && art.law.title ? art.law.title + ' — ' : '') + formatArticleLabel(art.articleNumber);
   document.getElementById('art-meta').textContent = [art.title, art.source].filter(Boolean).join(' · ');
   document.getElementById('art-content').textContent = art.content || '';
   document.getElementById('btn-save').textContent = art.saved ? 'حذف از ذخیره‌ها' : 'ذخیره ماده';
@@ -261,6 +374,7 @@ document.getElementById('q-global').oninput = () => {
 };
 document.getElementById('q-law').oninput = () => {
   clearTimeout(searchTimer);
+  articlePage = 1;
   searchTimer = setTimeout(refreshArticles, 350);
 };
 

@@ -96,6 +96,12 @@ async function main() {
     label: 'پیوند تست'
   });
 
+  const page1 = await req('GET', `/api/laws/${lawId}/articles?page=1&limit=50`, null, auth(lawyer.token));
+  assert('articles paginated 200', page1.status === 200);
+  assert('articles items array', Array.isArray(page1.body.items) && page1.body.items.length === 1);
+  assert('pagination total', page1.body.pagination?.total === 1);
+  assert('pagination page', page1.body.pagination?.page === 1);
+
   const search = await req('GET', '/api/laws/search?q=uniqueXYZ123', null, auth(lawyer.token));
   assert('search hit', search.status === 200 && search.body[0]?.id === articleId);
 

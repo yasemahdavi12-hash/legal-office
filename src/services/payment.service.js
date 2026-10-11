@@ -12,7 +12,7 @@ const {
 const { PRO_CURRENCY } = require('../config/subscription');
 const { writeAudit } = require('./audit.service');
 
-const FRONTEND_RESULT_PATH = '/';
+const FRONTEND_RESULT_PATH = '/app';
 
 function frontendRedirect(query) {
   const base = (config.corsOrigins && config.corsOrigins[0]) || `http://localhost:${config.port}`;

@@ -14,9 +14,11 @@ const casesRoutes = require('./routes/cases.routes');
 const clientsRoutes = require('./routes/clients.routes');
 const tasksRoutes = require('./routes/tasks.routes');
 const notesRoutes = require('./routes/notes.routes');
+const templatesRoutes = require('./routes/templates.routes');
 const documentsRoutes = require('./routes/documents.routes');
 const eventsRoutes = require('./routes/events.routes');
 const communicationsRoutes = require('./routes/communications.routes');
+const baleInboundRoutes = require('./routes/baleInbound.routes');
 const adminRoutes = require('./routes/admin.routes');
 const pushRoutes = require('./routes/push.routes');
 const remindersRoutes = require('./routes/reminders.routes');
@@ -97,10 +99,15 @@ function createApp() {
   });
 
   const publicFiles = new Set([
-    'index.html', 'admin.html', 'logout.html', 'offline.html', 'manifest.json', 'sw.js',
+    'index.html', 'landing.html', '404.html', 'admin.html', 'logout.html', 'offline.html',
+    'manifest.json', 'sw.js',
     'legal-tools.html', 'laws.html', 'lawyer-modules.js',
     'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png'
   ]);
+
+  app.get('/index.html', (req, res) => {
+    res.redirect(302, '/app');
+  });
 
   // Service Worker must be served from root scope with no long-lived cache
   app.get('/sw.js', (req, res) => {
@@ -152,8 +159,10 @@ function createApp() {
   app.use('/api/clients', clientsRoutes);
   app.use('/api/tasks', tasksRoutes);
   app.use('/api/notes', notesRoutes);
+  app.use('/api/templates', templatesRoutes);
   app.use('/api/documents', documentsRoutes);
   app.use('/api/events', eventsRoutes);
+  app.use('/api/communications/bale', baleInboundRoutes);
   app.use('/api/communications', communicationsRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/push', pushRoutes);
@@ -188,11 +197,20 @@ function createApp() {
     res.sendFile(path.join(root, 'login.html'));
   });
 
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(root, 'landing.html'));
+  });
+
+  app.get('/app', (req, res) => {
+    res.sendFile(path.join(root, 'index.html'));
+  });
+
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/')) {
       return next(new AppError('مسیر API یافت نشد', 404));
     }
-    return res.sendFile(path.join(root, 'index.html'));
+    res.status(404);
+    return res.sendFile(path.join(root, '404.html'));
   });
 
   app.use(errorHandler);

@@ -87,22 +87,53 @@ async function listArticles(lawId, user, query = {}) {
   assertLawyerPanel(user);
   const law = await db('laws').where({ id: lawId }).first();
   if (!law) throw new AppError('قانون یافت نشد', 404);
-  let q = db('law_articles').where({ law_id: lawId }).orderBy('article_number', 'asc');
+
+  const page = Math.max(1, Number.parseInt(String(query.page || '1'), 10) || 1);
+  const limit = Math.min(
+    100,
+    Math.max(1, Number.parseInt(String(query.limit || '50'), 10) || 50)
+  );
+
+  let base = db('law_articles').where({ law_id: lawId });
   if (query.q) {
     const term = `%${String(query.q).trim().slice(0, 120)}%`;
-    q = q.where((b) => {
+    base = base.where((b) => {
       b.where('content', 'like', term)
         .orWhere('title', 'like', term)
         .orWhere('article_number', 'like', term);
     });
   }
-  const rows = await q.limit(Math.min(Number(query.limit) || 500, 500));
-  return rows.map((r) => ({
+
+  const countRow = await base.clone().count({ c: '*' }).first();
+  const total = Number(countRow?.c ?? countRow?.count ?? 0);
+  const totalPages = total ? Math.ceil(total / limit) : 0;
+  const safePage = totalPages ? Math.min(page, totalPages) : 1;
+  const offset = (safePage - 1) * limit;
+
+  const rows = await base
+    .clone()
+    .orderBy('article_number', 'asc')
+    .limit(limit)
+    .offset(offset);
+
+  const items = rows.map((r) => ({
     id: r.id,
     articleNumber: r.article_number,
     title: r.title || null,
     excerpt: String(r.content || '').slice(0, 160)
   }));
+
+  return {
+    items,
+    pagination: {
+      page: safePage,
+      limit,
+      total,
+      totalPages,
+      hasNext: totalPages > 0 && safePage < totalPages,
+      hasPrev: safePage > 1
+    }
+  };
 }
 
 async function searchArticles(user, query = {}) {

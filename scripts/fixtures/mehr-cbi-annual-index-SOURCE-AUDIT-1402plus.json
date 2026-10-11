@@ -1,0 +1,30 @@
+{
+  "auditedAt": "2026-10-08",
+  "purpose": "Official-source trace for jalali index years 1402–1405 (no production values)",
+  "method": "Web search + fetch; cbi.ir direct pages often 403/WAF; third-party tables used only for cross-check, not ingest.",
+  "years": {
+    "1402": {
+      "status": "NOT_VERIFIED_FOR_INGEST",
+      "reason": "No CBI letter with annual mehrieh index table row for jalali year 1402 retrieved in this audit. Letter 10899/02 (1402/01/22) explicitly covers «سال 1401 و سال‌های قبل» only.",
+      "officialSourceSought": "CBI annual mehrieh index letter (Ordibehesht pattern, post-1402/01/22)",
+      "thirdPartyCrossCheckOnly": [
+        { "note": "Various sites cite ~974.75 for index year 1402; not adopted", "adopted": false }
+      ]
+    },
+    "1403": {
+      "status": "NOT_VERIFIED_FOR_INGEST",
+      "reason": "No verifiable CBI letter/table with exact annual index for jalali year 1403 in this audit.",
+      "thirdPartyCrossCheckOnly": [
+        { "note": "Some calculators cite ~1174.5 provisional; marked provisional on third-party sites", "adopted": false }
+      ]
+    },
+    "1404": {
+      "status": "NOT_VERIFIED_FOR_INGEST",
+      "reason": "No verifiable CBI letter/table with exact annual index for jalali year 1404 in this audit."
+    },
+    "1405": {
+      "status": "NOT_VERIFIED_FOR_INGEST",
+      "reason": "No publication of jalali year 1405 annual mehrieh index identified (expected after year-end / next Ordibehesht cycle)."
+    }
+  }
+}

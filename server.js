@@ -24,12 +24,14 @@ async function bootstrap() {
   const app = createApp();
   const { startReminderScheduler } = require('./src/jobs/reminderScheduler');
   const { startDocumentCleanupScheduler } = require('./src/jobs/documentCleanup');
+  const { startBaleInboundPoller } = require('./src/jobs/baleInboundPoller');
   // Production rate-limit store must be constructible (Redis)
   require('./src/middleware/rateLimitStore').getRateLimitStore();
 
   app.listen(config.port, () => {
     startReminderScheduler();
     startDocumentCleanupScheduler();
+    startBaleInboundPoller();
     console.log('');
     console.log('  ================================');
     console.log('   قانون در جیب شما — Backend');

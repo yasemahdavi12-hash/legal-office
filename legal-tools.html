@@ -97,7 +97,17 @@ const TOOL_HINTS = {
 
 const MEHR_DISCLAIMER = 'این ابزار برای محاسبه کمکی مهریه وجه رایج بر اساس شاخص‌های رسمی واردشده در سامانه است و جایگزین مشاوره حقوقی یا تصمیم مرجع قضایی نیست.';
 const MEHR_NO_COIN = 'مهریه سکه و موضوع ضمانت اجرای ۱۱۰ سکه در این نسخه محاسبه نمی‌شود.';
-const MEHR_INDEX_EMPTY_MSG = 'برای سال‌های موردنیاز این محاسبه هنوز شاخص رسمی در سامانه ثبت نشده است.';
+const MEHR_DATASET_EMPTY_MSG = 'داده رسمی برای این محاسبه هنوز در سامانه ثبت نشده است.';
+const MEHR_COIN_INACTIVE_MSG = 'محاسبه مهریه سکه هنوز فعال نیست.';
+
+function formatMehrIndexError(details) {
+  if (details?.datasetEmpty) return MEHR_DATASET_EMPTY_MSG;
+  const years = details?.missingYears;
+  if (Array.isArray(years) && years.length) {
+    return `اطلاعات شاخص رسمی برای سال ${years.join('، ')} در سامانه موجود نیست.`;
+  }
+  return MEHR_DATASET_EMPTY_MSG;
+}
 
 const FORM_HTML = {
   'date-diff': `
@@ -124,6 +134,7 @@ const FORM_HTML = {
     </div>`,
   'mehr-calc': `
     <p class="tool-hint" id="mehr-coverage-notice">فقط مهریه وجه رایج؛ محاسبه فقط برای سال‌هایی که شاخص رسمی آن‌ها در سامانه ثبت شده باشد.</p>
+    <p class="tool-hint" id="mehr-coin-disabled">${MEHR_COIN_INACTIVE_MSG}</p>
     <div class="fg"><label class="fl" for="in-mehr-amount">مبلغ مهریه</label><input class="fc" type="number" id="in-mehr-amount" min="0" step="any" required></div>
     <div class="fg"><label class="fl" for="in-mehr-currency">واحد</label>
       <select class="fc" id="in-mehr-currency"><option value="IRT">تومان</option><option value="IRR">ریال</option></select>
@@ -137,7 +148,7 @@ const FORM_HTML = {
       <div class="fg"><label class="fl" for="in-mehr-payment-year">سال پرداخت (شمسی)</label><input class="fc" type="number" id="in-mehr-payment-year" step="1" placeholder="اگر تاریخ ندارید"></div>
     </div>
     <div class="fg" id="mehr-death-fields" hidden><label class="fl" for="in-mehr-death-date">تاریخ فوت (شمسی YYYY-MM-DD)</label><input class="fc" type="text" id="in-mehr-death-date" placeholder="مثلاً 1402-06-15" pattern="\\d{4}-\\d{2}-\\d{2}"></div>
-    <p class="tool-hint" id="mehr-index-unavailable-text" hidden>${MEHR_INDEX_EMPTY_MSG}</p>
+    <p class="tool-hint" id="mehr-index-unavailable-text" hidden></p>
     <p class="note">${MEHR_DISCLAIMER} ${MEHR_NO_COIN}</p>
     <div class="form-actions">
       <button type="button" class="btn btn-p" onclick="runCalc()">محاسبه</button>
@@ -409,8 +420,12 @@ async function runCalc() {
     const idxMsg = document.getElementById('mehr-index-unavailable-text');
     if (idxMsg) idxMsg.hidden = true;
     if (currentSlug === 'mehr-calc' && e.status === 422 && e.body?.details?.code === 'INDEX_NOT_AVAILABLE') {
-      el.textContent = MEHR_INDEX_EMPTY_MSG;
-      if (idxMsg) idxMsg.hidden = false;
+      const msg = formatMehrIndexError(e.body.details);
+      el.textContent = msg;
+      if (idxMsg) {
+        idxMsg.textContent = msg;
+        idxMsg.hidden = false;
+      }
     } else {
       el.textContent = e.message || 'خطا';
     }

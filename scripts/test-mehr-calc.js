@@ -92,14 +92,20 @@ function runUiStaticTests() {
   assert('UI coin disclaimer', html.includes('۱۱۰ سکه') && html.includes('محاسبه نمی‌شود'));
   assert('UI payment conflict validation', html.includes('فقط یکی از تاریخ پرداخت یا سال پرداخت'));
   assert('UI basis sync disable', html.includes('el.disabled = !isPay'));
-  assert('UI INDEX empty message', html.includes('برای سال‌های موردنیاز این محاسبه هنوز شاخص رسمی در سامانه ثبت نشده است'));
+  assert('UI dataset empty message', html.includes('داده رسمی برای این محاسبه هنوز در سامانه ثبت نشده است'));
+  assert('UI missing year message', html.includes('اطلاعات شاخص رسمی برای سال'));
+  assert('UI coin inactive message', html.includes('محاسبه مهریه سکه هنوز فعال نیست'));
   assert('UI mobile media query', html.includes('@media(max-width:640px)'));
   assert('UI no coin input field', !html.includes('in-mehr-coin'));
 }
 
 async function runApiTests(port, token) {
   const auth = { Authorization: 'Bearer ' + token };
-  const ok = await req(
+  const catalog = await req(port, 'GET', '/api/legal-tools', null, auth);
+  const mehr = (catalog.body.tools || []).find((t) => t.slug === 'mehr-calc');
+  assert('API catalog mehr coming_soon', mehr?.status === 'coming_soon');
+
+  const blocked = await req(
     port,
     'POST',
     '/api/legal-tools/mehr-calc/calculate',
@@ -113,57 +119,16 @@ async function runApiTests(port, token) {
     auth
   );
   assert(
-    'API successful calculate 200',
-    ok.status === 200 && ok.body.result?.calculatedAmount === 2_000_000 && ok.body.result?.indexDatasetVersion
-  );
-
-  const bad422 = await req(
-    port,
-    'POST',
-    '/api/legal-tools/mehr-calc/calculate',
-    {
-      amount: 1_000_000,
-      currency: 'IRR',
-      contractYear: 1395,
-      basisType: 'payment',
-      paymentYear: 1403
-    },
-    auth
-  );
-  assert(
-    'API 422 INDEX_NOT_AVAILABLE',
-    bad422.status === 422 &&
-      bad422.body.details?.code === 'INDEX_NOT_AVAILABLE' &&
-      Array.isArray(bad422.body.details?.missingYears)
+    'API TOOL_NOT_READY (no fake result)',
+    blocked.status === 400 &&
+      blocked.body.details?.code === 'TOOL_NOT_READY' &&
+      blocked.body.result == null
   );
 
   const detail = await req(port, 'GET', '/api/legal-tools/mehr-calc', null, auth);
-  assert('GET detail mehr-calc', detail.status === 200 && detail.body.slug === 'mehr-calc');
-
-  const conflict = await req(
-    port,
-    'POST',
-    '/api/legal-tools/mehr-calc/calculate',
-    {
-      amount: 1_000_000,
-      currency: 'IRR',
-      contractYear: 1390,
-      basisType: 'payment',
-      paymentDate: '1400-01-01',
-      paymentYear: 1400
-    },
-    auth
-  );
-  assert('API paymentDate+paymentYear 400', conflict.status === 400);
-
   assert(
-    'API disclaimer envelope',
-    ok.body.disclaimer?.includes('وجه رایج') && ok.body.disclaimer?.includes('۱۱۰ سکه')
-  );
-  assert(
-    'API rounding metadata',
-    ok.body.result?.rounding?.policy === 'no_official_statutory_rounding' &&
-      ok.body.result?.calculatedAmountRaw != null
+    'GET detail mehr-calc',
+    detail.status === 200 && detail.body.slug === 'mehr-calc' && detail.body.status === 'coming_soon'
   );
 }
 

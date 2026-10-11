@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "قانون در جیب شما",
-  "short_name": "قانون",
-  "description": "سامانه مدیریت پرونده حقوقی",
+  "name": "دادبان",
+  "short_name": "دادبان",
+  "description": "دادبان — سامانه مدیریت پرونده حقوقی برای وکلا",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

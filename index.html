@@ -6,12 +6,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="قانون در جیب شما">
+<meta name="apple-mobile-web-app-title" content="دادبان">
 <meta name="theme-color" content="#0f2540">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icon-192.png">
-<title>قانون در جیب شما | مدیریت پرونده حقوقی</title>
+<title>دادبان | پنل وکیل</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -83,6 +83,7 @@ img{max-width:100%;display:block}
   display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;
   color:rgba(255,255,255,.62);font-size:13px;border:none;background:none;width:100%;text-align:right;transition:background .15s,color .15s;
 }
+a.nav-btn{text-decoration:none;cursor:pointer;font-family:inherit;box-sizing:border-box}
 .nav-btn:hover{background:rgba(255,255,255,.07);color:#fff}
 .nav-btn.active{background:var(--pl);color:#fff}
 .nav-btn .ni{width:20px;text-align:center;opacity:.9;font-size:14px}
@@ -171,6 +172,24 @@ tbody td{padding:11px 12px;vertical-align:middle}
 .case-msg.client{align-self:flex-start;background:#f8fafc;border:1px solid var(--border)}
 .case-msg-meta{font-size:11px;color:var(--muted);margin-top:6px}
 .case-msg-compose{display:flex;flex-direction:column;gap:8px}
+.comms-launcher{max-width:640px;margin:0 auto}
+.comms-launcher-hd{text-align:center;margin-bottom:28px}
+.comms-launcher-hd h2{font-size:22px;font-weight:800;color:var(--primary);margin:0 0 10px}
+.comms-launcher-hd p{font-size:14px;color:var(--muted);line-height:1.75;margin:0}
+.comms-shortcut-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:560px){.comms-shortcut-grid{grid-template-columns:1fr}}
+.comms-shortcut{
+  display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:22px 20px;border:1px solid var(--border);
+  border-radius:14px;background:#fff;cursor:pointer;text-align:right;width:100%;font:inherit;color:inherit;
+  box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s,transform .12s
+}
+.comms-shortcut:hover{border-color:var(--pl);box-shadow:0 4px 14px rgba(30,74,122,.12);transform:translateY(-1px)}
+.comms-shortcut:focus-visible{outline:2px solid var(--pl);outline-offset:2px}
+.comms-shortcut-icon{font-size:28px;line-height:1}
+.comms-shortcut-name{font-size:17px;font-weight:800;color:var(--text)}
+.comms-shortcut-action{font-size:13px;font-weight:600;color:var(--pl)}
+.comms-shortcut.bale{border-right:4px solid #22c55e}
+.comms-shortcut.rubika{border-right:4px solid #3b82f6}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;border:none;transition:background .15s,border-color .15s,opacity .15s;white-space:nowrap}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .btn-p{background:var(--pl);color:#fff}.btn-p:hover:not(:disabled){background:var(--primary)}
@@ -340,12 +359,12 @@ tbody td{padding:11px 12px;vertical-align:middle}
 <body>
 
 <!-- LOGIN -->
-<div class="login-page show" id="login-page" role="dialog" aria-labelledby="login-title">
+<div class="login-page" id="login-page" role="dialog" aria-labelledby="login-title">
   <div class="login-box">
     <div class="login-brand">
       <div class="mark" aria-hidden="true">ق</div>
-      <h1 id="login-title">قانون در جیب شما</h1>
-      <p>سامانه مدیریت پرونده حقوقی</p>
+      <h1 id="login-title">دادبان</h1>
+      <p>پنل وکیل — مدیریت پرونده حقوقی</p>
     </div>
     <div class="login-tabs" role="tablist">
       <button type="button" class="login-tab active" role="tab" aria-selected="true" onclick="switchLoginTab('login',this)">ورود</button>
@@ -420,8 +439,8 @@ tbody td{padding:11px 12px;vertical-align:middle}
   <div class="s-logo">
     <div class="s-logo-icon">ق</div>
     <div>
-      <h2>قانون در جیب شما</h2>
-      <p>مدیریت پرونده حقوقی</p>
+      <h2>دادبان</h2>
+      <p>پنل وکیل</p>
     </div>
   </div>
   <div class="s-nav">
@@ -436,6 +455,8 @@ tbody td{padding:11px 12px;vertical-align:middle}
     <button type="button" class="nav-btn" data-page="notes" onclick="showPage('notes',this)"><span class="ni" aria-hidden="true">✎</span>یادداشت‌ها</button>
     <button type="button" class="nav-btn" data-page="comms" onclick="showPage('comms',this)"><span class="ni" aria-hidden="true">✉</span>ارتباطات</button>
     <div class="s-sec">ابزارها</div>
+    <a class="nav-btn" href="/legal-tools"><span class="ni" aria-hidden="true">⚖️</span>ابزارهای حقوقی</a>
+    <a class="nav-btn" href="/laws"><span class="ni" aria-hidden="true">📚</span>قوانین و مقررات</a>
     <button type="button" class="nav-btn" data-page="ai" onclick="showPage('ai',this)"><span class="ni" aria-hidden="true">◇</span>دستیار هوشمند</button>
     <button type="button" class="nav-btn" data-page="templates" onclick="showPage('templates',this)"><span class="ni" aria-hidden="true">≡</span>قالب‌ها</button>
     <button type="button" class="nav-btn" data-page="finance" onclick="showPage('finance',this)"><span class="ni" aria-hidden="true">﷼</span>امور مالی</button>
@@ -480,16 +501,12 @@ tbody td{padding:11px 12px;vertical-align:middle}
 
     <!-- DASHBOARD -->
     <section class="page active" id="page-dashboard" aria-label="داشبورد">
-      <div class="alert al-i">رابط کاربری آماده است. داده‌ها پس از اتصال Backend بارگذاری می‌شوند.</div>
+      <div class="alert al-i" id="dash-backend-alert" hidden>در حالت پیش‌نمایش، داده از سرور بارگذاری نمی‌شود.</div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">▣</div><div><div class="stat-num" id="st-cases">—</div><div class="stat-lbl">پرونده‌ها</div></div></div>
         <div class="stat-card g"><div class="stat-icon ic-g">◎</div><div><div class="stat-num" id="st-clients">—</div><div class="stat-lbl">موکلین</div></div></div>
         <div class="stat-card w"><div class="stat-icon ic-w">✓</div><div><div class="stat-num" id="st-tasks">—</div><div class="stat-lbl">وظایف امروز</div></div></div>
         <div class="stat-card gold"><div class="stat-icon ic-gold">◷</div><div><div class="stat-num" id="st-events">—</div><div class="stat-lbl">جلسات نزدیک</div></div></div>
-      </div>
-      <div class="dash-modules" aria-label="ماژول‌های حقوقی">
-        <a class="dash-module" href="/legal-tools"><span class="icon" aria-hidden="true">⚖️</span> ابزارهای حقوقی</a>
-        <a class="dash-module" href="/laws"><span class="icon" aria-hidden="true">📚</span> قوانین و مقررات</a>
       </div>
       <div class="g2">
         <div class="card">
@@ -752,7 +769,7 @@ tbody td{padding:11px 12px;vertical-align:middle}
           <div class="upload-cats">
             <span>سایر اسناد</span><span>قراردادها</span><span>مدارک موکل</span><span>PDF</span><span>تصاویر</span>
           </div>
-          <p class="backend-hint">آپلود واقعی پس از اتصال Backend فعال می‌شود.</p>
+          <p class="backend-hint" id="docs-upload-hint" hidden>برای آپلود سند، وارد سامانه شوید (نه حالت پیش‌نمایش).</p>
         </div>
       </div>
       <div class="g3" id="docs-grid"></div>
@@ -760,47 +777,23 @@ tbody td{padding:11px 12px;vertical-align:middle}
 
     <!-- COMMUNICATIONS -->
     <section class="page" id="page-comms" aria-label="ارتباطات">
-      <div class="alert al-i">این بخش فقط ظاهر و تنظیمات اتصال پیام‌رسان‌ها را آماده می‌کند. ارسال واقعی پس از Backend انجام می‌شود.</div>
-      <div class="g2" style="margin-bottom:16px">
-        <div class="provider-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <h3>بله</h3>
-            <span class="status-pill" id="bale-status"><span class="dot"></span>قطع</span>
-          </div>
-          <p>اتصال حساب بله برای ارسال پیام، مدیریت کانال و گروه.</p>
-          <div class="fg"><label class="fl" for="bale-token">توکن ربات / API</label><input class="fc" id="bale-token" placeholder="آماده برای مقداردهی از Backend" disabled></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" class="btn btn-p btn-sm" onclick="uiBackendOnly('اتصال حساب بله')">اتصال حساب</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="uiBackendOnly('ارسال پیام بله')">ارسال پیام</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="uiBackendOnly('مدیریت کانال بله')">مدیریت کانال</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="uiBackendOnly('مدیریت گروه بله')">مدیریت گروه</button>
-          </div>
+      <div class="comms-launcher card" style="padding:28px 24px 32px">
+        <header class="comms-launcher-hd">
+          <h2>ارتباطات</h2>
+          <p>برای ارتباط سریع، پیام‌رسان موردنظر خود را باز کنید.</p>
+        </header>
+        <div class="comms-shortcut-grid">
+          <button type="button" class="comms-shortcut bale" onclick="openExternalMessenger('bale')" aria-label="باز کردن بله">
+            <span class="comms-shortcut-icon" aria-hidden="true">🟢</span>
+            <span class="comms-shortcut-name">بله</span>
+            <span class="comms-shortcut-action">باز کردن بله ←</span>
+          </button>
+          <button type="button" class="comms-shortcut rubika" onclick="openExternalMessenger('rubika')" aria-label="باز کردن روبیکا">
+            <span class="comms-shortcut-icon" aria-hidden="true">🔵</span>
+            <span class="comms-shortcut-name">روبیکا</span>
+            <span class="comms-shortcut-action">باز کردن روبیکا ←</span>
+          </button>
         </div>
-        <div class="provider-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <h3>روبیکا</h3>
-            <span class="status-pill" id="rubika-status"><span class="dot"></span>قطع</span>
-          </div>
-          <p>اتصال حساب روبیکا برای پیام‌رسانی و مدیریت کانال/گروه.</p>
-          <div class="fg"><label class="fl" for="rubika-token">توکن / کلید دسترسی</label><input class="fc" id="rubika-token" placeholder="آماده برای مقداردهی از Backend" disabled></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" class="btn btn-p btn-sm" onclick="uiBackendOnly('اتصال حساب روبیکا')">اتصال حساب</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="uiBackendOnly('ارسال پیام روبیکا')">ارسال پیام</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="uiBackendOnly('مدیریت کانال روبیکا')">مدیریت کانال</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="uiBackendOnly('مدیریت گروه روبیکا')">مدیریت گروه</button>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-title">پیش‌نویس پیام</div></div>
-        <div class="fr">
-          <div class="fg"><label class="fl" for="msg-provider">پیام‌رسان</label>
-            <select class="fc" id="msg-provider"><option value="bale">بله</option><option value="rubika">روبیکا</option></select>
-          </div>
-          <div class="fg"><label class="fl" for="msg-target">گیرنده / کانال / گروه</label><input class="fc" id="msg-target" placeholder="شناسه یا نام"></div>
-        </div>
-        <div class="fg"><label class="fl" for="msg-body">متن پیام</label><textarea class="fc" id="msg-body" rows="4" placeholder="متن پیام..."></textarea></div>
-        <button type="button" class="btn btn-p" onclick="uiBackendOnly('ارسال پیام')">ارسال (پس از Backend)</button>
       </div>
     </section>
 
@@ -836,20 +829,43 @@ tbody td{padding:11px 12px;vertical-align:middle}
 
     <!-- TEMPLATES -->
     <section class="page" id="page-templates" aria-label="قالب‌ها">
-      <div class="alert al-i">قالب‌های آماده برای لایحه، دادخواست و قرارداد — پر شدن خودکار پس از Backend.</div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="form-actions" style="flex-wrap:wrap;align-items:flex-end;gap:10px">
+          <div class="fg" style="margin:0;flex:1;min-width:160px">
+            <label class="fl" for="tpl-search">جستجوی نام قالب</label>
+            <input class="fc" type="search" id="tpl-search" dir="rtl" placeholder="مثلاً لایحه..." oninput="renderTemplates()" autocomplete="off">
+          </div>
+          <div class="fg" style="margin:0;min-width:150px">
+            <label class="fl" for="tpl-cat-filter">نوع سند</label>
+            <select class="fc" id="tpl-cat-filter" onchange="renderTemplates()" aria-label="فیلتر نوع سند">
+              <option value="">همه دسته‌ها</option>
+              <option value="petition">دادخواست</option>
+              <option value="pleading">لایحه</option>
+              <option value="declaration">اظهارنامه</option>
+              <option value="contract">قرارداد</option>
+              <option value="court_request">درخواست قضایی</option>
+              <option value="office">اداری دفتر</option>
+              <option value="letter">نامه</option>
+              <option value="other">سایر</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-p" onclick="openTemplateForm()">قالب جدید</button>
+        </div>
+        <div class="cat-tabs" style="margin-top:12px;margin-bottom:0">
+          <button type="button" class="cat-tab active" id="tpl-tab-all" onclick="setTemplateScope('all',this)">همه</button>
+          <button type="button" class="cat-tab" id="tpl-tab-system" onclick="setTemplateScope('system',this)">قالب‌های آماده</button>
+          <button type="button" class="cat-tab" id="tpl-tab-mine" onclick="setTemplateScope('mine',this)">قالب‌های من</button>
+        </div>
+      </div>
       <div class="g3" id="templates-grid"></div>
     </section>
 
     <!-- FINANCE -->
     <section class="page" id="page-finance" aria-label="امور مالی">
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-        <div class="stat-card g"><div class="stat-icon ic-g">↓</div><div><div class="stat-num">—</div><div class="stat-lbl">دریافتی</div></div></div>
-        <div class="stat-card r"><div class="stat-icon ic-r">↑</div><div><div class="stat-num">—</div><div class="stat-lbl">هزینه</div></div></div>
-        <div class="stat-card"><div class="stat-icon">∑</div><div><div class="stat-num">—</div><div class="stat-lbl">مانده</div></div></div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-title">تراکنش‌ها</div><button type="button" class="btn btn-sm btn-p" onclick="uiBackendOnly('ثبت تراکنش')">ثبت تراکنش</button></div>
-        <div class="empty"><div class="empty-icon">﷼</div><h3>بدون تراکنش</h3><p>پس از اتصال Backend، لیست مالی اینجا نمایش داده می‌شود.</p></div>
+      <div class="card" id="finance-content">
+        <div class="card-hd"><div class="card-title">امور مالی پرونده‌ها</div></div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">حق‌الوکاله و پرداخت‌ها برای هر پرونده در جزئیات همان پرونده → تب «امور مالی» ثبت می‌شود.</p>
+        <div id="finance-case-list"></div>
       </div>
     </section>
 
@@ -1107,11 +1123,65 @@ tbody td{padding:11px 12px;vertical-align:middle}
   </div>
 </div>
 
-<div class="overlay" id="modal-template" role="dialog" aria-modal="true">
+<div class="overlay" id="modal-template" role="dialog" aria-modal="true" aria-labelledby="tpl-modal-heading">
   <div class="modal wide">
-    <div class="mh"><div class="mt" id="tpl-title">قالب</div><button type="button" class="mc" onclick="closeModal('modal-template')" aria-label="بستن">✕</button></div>
-    <div class="mb"><textarea class="fc" id="tpl-text" rows="14" style="line-height:1.8" readonly></textarea></div>
-    <div class="mf"><button type="button" class="btn btn-o" onclick="closeModal('modal-template')">بستن</button></div>
+    <div class="mh"><div class="mt" id="tpl-modal-heading">قالب حقوقی</div><button type="button" class="mc" onclick="closeModal('modal-template')" aria-label="بستن">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="tpl-id" value="">
+      <div class="fg"><label class="fl" for="tpl-title-input">عنوان</label>
+        <input class="fc" id="tpl-title-input" dir="rtl" maxlength="255" placeholder="عنوان قالب"></div>
+      <div class="fg"><label class="fl" for="tpl-category">نوع سند</label>
+        <select class="fc" id="tpl-category">
+          <option value="petition">دادخواست</option>
+          <option value="pleading">لایحه</option>
+          <option value="declaration">اظهارنامه</option>
+          <option value="contract">قرارداد</option>
+          <option value="court_request">درخواست قضایی</option>
+          <option value="office">اداری دفتر</option>
+          <option value="letter">نامه</option>
+          <option value="other">سایر</option>
+        </select></div>
+      <p class="tool-hint" id="tpl-usage-notes" hidden></p>
+      <div class="form-actions" style="margin-bottom:8px;flex-wrap:wrap">
+        <button type="button" class="btn btn-sm btn-o" onclick="tplInsertVariable()">درج متغیر</button>
+        <select class="fc" id="tpl-var-pick" style="width:auto;max-width:200px;font-size:12px" aria-label="متغیر">
+          <option value="">— متغیر —</option>
+        </select>
+        <button type="button" class="btn btn-sm btn-o" onclick="tplInsertDate()">تاریخ امروز</button>
+        <button type="button" class="btn btn-sm btn-o" onclick="previewTemplateDoc()">پیش‌نمایش</button>
+        <button type="button" class="btn btn-sm btn-o" onclick="printTemplateDoc()">چاپ</button>
+        <button type="button" class="btn btn-sm btn-o" onclick="downloadTemplateTxt()">دانلود متن</button>
+      </div>
+      <div class="fg"><label class="fl" for="tpl-text">متن قالب</label>
+        <textarea class="fc" id="tpl-text" rows="14" dir="rtl" style="line-height:1.8;max-width:100%;min-height:200px" placeholder="متن سند را اینجا بنویسید یا ویرایش کنید..."></textarea></div>
+      <div class="fg" id="tpl-vars-panel" hidden>
+        <label class="fl">متغیرهای پر نشده (پیش‌نمایش)</label>
+        <div id="tpl-unfilled-vars" class="tool-hint"></div>
+      </div>
+      <div class="fg" id="tpl-use-case-block">
+        <label class="fl" for="tpl-use-case">استفاده در پرونده (یادداشت)</label>
+        <select class="fc" id="tpl-use-case"><option value="">— انتخاب پرونده —</option></select>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">متن قالب در یادداشت پرونده کپی می‌شود؛ ویرایشگر فایل جداگانه برای اسناد آپلودی است.</p>
+      </div>
+      <div id="tpl-form-err" hidden class="err" style="margin-top:0"></div>
+    </div>
+    <div class="mf form-actions">
+      <button type="button" class="btn btn-o" id="tpl-btn-delete" hidden onclick="deleteTemplateConfirm()">حذف</button>
+      <button type="button" class="btn btn-o" id="tpl-btn-dup" hidden onclick="duplicateTemplateFromEditor()">نسخه شخصی</button>
+      <button type="button" class="btn btn-o" onclick="closeModal('modal-template')">انصراف</button>
+      <button type="button" class="btn btn-o" onclick="useTemplateInCaseNote()">درج در یادداشت</button>
+      <button type="button" class="btn btn-o" onclick="saveTemplateFormAsNew()">ذخیره با نام جدید</button>
+      <button type="button" class="btn btn-p" id="tpl-btn-save" onclick="saveTemplateForm()">ذخیره</button>
+      <span id="tpl-save-status" style="font-size:12px;color:var(--muted);margin-right:8px"></span>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-template-preview" role="dialog" aria-modal="true">
+  <div class="modal wide">
+    <div class="mh"><div class="mt">پیش‌نمایش سند</div><button type="button" class="mc" onclick="closeModal('modal-template-preview')" aria-label="بستن">✕</button></div>
+    <div class="mb"><pre id="tpl-preview-body" dir="rtl" style="white-space:pre-wrap;font-family:inherit;line-height:1.85;margin:0"></pre></div>
+    <div class="mf"><button type="button" class="btn btn-o" onclick="closeModal('modal-template-preview')">بستن</button></div>
   </div>
 </div>
 
@@ -1256,9 +1326,12 @@ const store = {
   clients: [],
   tasks: [],
   notes: [],
+  templates: [],
   documents: [],
   events: [],
-  notifications: []
+  notifications: [],
+  comms: [],
+  apiSynced: false
 };
 
 const STATUS = {
@@ -1396,7 +1469,38 @@ async function apiSend(method, path, data) {
 }
 
 function uiBackendOnly(action) {
-  showToast((action || 'این عملیات') + ' پس از اتصال Backend فعال می‌شود');
+  if (PREVIEW_MODE) {
+    showToast('در حالت پیش‌نمایش این عملیات غیرفعال است');
+    return;
+  }
+  if (!TOKEN) {
+    showToast('لطفاً وارد سامانه شوید');
+    return;
+  }
+  showToast((action || 'این عملیات') + ' در دسترس نیست');
+}
+
+function emptyDataHint(whenSynced) {
+  if (PREVIEW_MODE) return 'در حالت پیش‌نمایش داده از سرور بارگذاری نمی‌شود.';
+  if (store.apiSynced) return whenSynced;
+  return 'بارگذاری از سرور ناموفق بود. صفحه را رفرش کنید یا دوباره وارد شوید.';
+}
+
+function updateShellPlaceholders() {
+  const dash = document.getElementById('dash-backend-alert');
+  if (dash) {
+    if (PREVIEW_MODE) {
+      dash.hidden = false;
+      dash.textContent = 'در حالت پیش‌نمایش، داده از سرور بارگذاری نمی‌شود.';
+    } else if (!store.apiSynced && TOKEN) {
+      dash.hidden = false;
+      dash.textContent = 'اتصال به سرور برقرار نشد. داده‌ها بارگذاری نشدند.';
+    } else {
+      dash.hidden = true;
+    }
+  }
+  const docsHint = document.getElementById('docs-upload-hint');
+  if (docsHint) docsHint.hidden = !(PREVIEW_MODE || !store.apiSynced);
 }
 
 /* ===== UI HELPERS ===== */
@@ -1565,9 +1669,16 @@ function showPage(id, btn) {
   closeNotif();
   const map = {
     dashboard: renderDashboard, cases: renderCases, clients: renderClients, tasks: renderTasks,
-    notes: renderNotes, calendar: renderCalendar, documents: renderDocs, ai: renderAI, templates: renderTemplates
+    notes: renderNotes, calendar: renderCalendar, documents: renderDocs, comms: renderComms,
+    ai: renderAI, templates: renderTemplatesPage, finance: renderFinance
   };
-  if (map[id]) map[id]();
+  const fn = map[id];
+  if (fn) Promise.resolve(fn()).catch(() => {});
+}
+
+async function renderTemplatesPage() {
+  await refreshTemplatesFromApi();
+  renderTemplates();
 }
 
 /* ===== AUTH / PREVIEW ===== */
@@ -1723,6 +1834,7 @@ function showApp(user) {
   document.getElementById('set-phone').value = user?.phone || '';
   document.getElementById('set-license').value = user?.license_number || user?.licenseNumber || '';
   renderSubscription();
+  updateShellPlaceholders();
   renderAll();
   if (!PREVIEW_MODE && TOKEN) {
     startNotificationPolling();
@@ -1734,8 +1846,10 @@ function showApp(user) {
 }
 function enterPreview() {
   PREVIEW_MODE = true;
+  store.apiSynced = false;
   CURRENT_USER = { name: 'پیش‌نمایش', role: 'lawyer' };
   showApp(CURRENT_USER);
+  updateShellPlaceholders();
   showToast('حالت پیش‌نمایش UI — بدون ذخیره داده');
 }
 async function finishLoginSession(data) {
@@ -1872,42 +1986,97 @@ function doLogout() {
   localStorage.removeItem('legal_refresh');
   localStorage.removeItem('legal_user');
   Object.keys(store).forEach(k => { store[k] = []; });
-  document.getElementById('app-layout').hidden = true;
-  document.getElementById('login-page').classList.add('show');
-  setAuthStep('login');
+  navTo('/');
 }
 
 async function loadFromApi() {
+  store.apiSynced = false;
+  async function loadKey(key, fn) {
+    try {
+      return { key, ok: true, data: await fn() };
+    } catch (e) {
+      return { key, ok: false, error: e };
+    }
+  }
+  const parts = await Promise.all([
+    loadKey('cases', () => apiGet('/cases')),
+    loadKey('clients', () => apiGet('/clients')),
+    loadKey('events', () => apiGet('/events')),
+    loadKey('tasks', () => apiGet('/tasks')),
+    loadKey('documents', () => apiGet('/documents')),
+    loadKey('notes', () => apiGet('/notes')),
+    loadKey('templates', () => apiGet('/templates')),
+    loadKey('comms', () => apiGet('/communications')),
+    loadKey('subscription', () => apiGet('/subscription')),
+    loadKey('todayRem', () => apiGet('/reminders/today')),
+    loadKey('upRem', () => apiGet('/reminders/upcoming'))
+  ]);
+  for (const p of parts) {
+    if (!p.ok) continue;
+    const data = p.data;
+    switch (p.key) {
+      case 'cases':
+        store.cases = normalizeCases(Array.isArray(data) ? data : []);
+        break;
+      case 'clients':
+        store.clients = Array.isArray(data) ? data : [];
+        break;
+      case 'events':
+        store.events = Array.isArray(data) ? data : [];
+        break;
+      case 'tasks':
+        store.tasks = normalizeTasks(Array.isArray(data) ? data : []);
+        break;
+      case 'documents':
+        store.documents = Array.isArray(data) ? data : [];
+        break;
+      case 'notes':
+        store.notes = (Array.isArray(data) ? data : []).map(n => ({
+          ...n,
+          caseId: n.caseId || n.case_id || null,
+          cat: n.cat || n.category || 'general',
+          body: n.body || n.content || n.text || ''
+        }));
+        break;
+      case 'templates':
+        store.templates = (Array.isArray(data) ? data : []).map(t => ({
+          ...t,
+          cat: t.cat || t.category || 'other',
+          body: t.body || t.content || t.text || ''
+        }));
+        break;
+      case 'comms':
+        store.comms = Array.isArray(data) ? data : [];
+        break;
+      case 'subscription':
+        SUBSCRIPTION = data;
+        break;
+      case 'todayRem':
+        REMINDERS_TODAY = Array.isArray(data) ? data : [];
+        break;
+      case 'upRem':
+        REMINDERS_UPCOMING = Array.isArray(data) ? data : [];
+        break;
+      default:
+        break;
+    }
+  }
+  const casesPart = parts.find((p) => p.key === 'cases');
+  store.apiSynced = !!(casesPart && casesPart.ok);
+  if (TOKEN && !PREVIEW_MODE && !store.apiSynced) {
+    showToast('بارگذاری داده از سرور ناموفق بود');
+  }
   try {
-    const [cases, clients, events, tasks, documents, notes, sub, todayRem, upRem] = await Promise.all([
-      apiGet('/cases'), apiGet('/clients'), apiGet('/events'),
-      apiGet('/tasks'), apiGet('/documents'), apiGet('/notes'),
-      apiGet('/subscription').catch(() => null),
-      apiGet('/reminders/today').catch(() => []),
-      apiGet('/reminders/upcoming').catch(() => [])
-    ]);
-    if (cases) store.cases = normalizeCases(cases);
-    if (clients) store.clients = clients;
-    if (events) store.events = events;
-    if (tasks) store.tasks = normalizeTasks(tasks);
-    if (documents) store.documents = documents;
-    if (notes) store.notes = (notes || []).map(n => ({
-      ...n,
-      caseId: n.caseId || n.case_id || null,
-      cat: n.cat || n.category || 'general',
-      body: n.body || n.content || n.text || ''
-    }));
-    REMINDERS_TODAY = Array.isArray(todayRem) ? todayRem : [];
-    REMINDERS_UPCOMING = Array.isArray(upRem) ? upRem : [];
     await loadNotificationsFromApi(false);
     await refreshNotifUnreadCount();
-    if (sub) {
-      SUBSCRIPTION = sub;
-      renderSubscription();
-      renderAI();
-    }
-    await syncPushSettingsUi();
-  } catch { /* keep empty store */ }
+  } catch { /* ignore */ }
+  if (SUBSCRIPTION) {
+    renderSubscription();
+    renderAI();
+  }
+  await syncPushSettingsUi();
+  updateShellPlaceholders();
+  renderComms();
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -2145,6 +2314,8 @@ function renderAll() {
   renderDocs();
   renderAI();
   renderTemplates();
+  renderComms();
+  renderFinance();
 }
 
 function renderNotifications() {
@@ -2220,7 +2391,7 @@ function renderDashboard() {
   rc.innerHTML = store.cases.length ? `<div class="tbl-wrap"><table><thead><tr><th>شماره</th><th>عنوان</th><th>وضعیت</th></tr></thead><tbody>
     ${store.cases.slice(0, 5).map(c => `<tr style="cursor:pointer" onclick="openCaseDetail(${c.id})"><td>${escapeHtml(c.num)}</td><td>${escapeHtml(c.title)}</td><td>${statusBadge(c.status)}</td></tr>`).join('')}
     </tbody></table></div>`
-    : emptyBlock('▣', 'بدون پرونده', 'پس از ثبت یا بارگذاری از Backend، پرونده‌ها اینجا دیده می‌شوند.', 'افزودن پرونده', "openCaseForm()");
+    : emptyBlock('▣', 'بدون پرونده', emptyDataHint('هنوز پرونده‌ای ثبت نشده. اولین پرونده را اضافه کنید.'), 'افزودن پرونده', "openCaseForm()");
 }
 
 function renderCases() {
@@ -2231,7 +2402,7 @@ function renderCases() {
   if (q) list = list.filter(c => [c.num, c.archive, c.title, c.branch].join(' ').includes(q));
   const tb = document.getElementById('cases-tbody');
   if (!list.length) {
-    tb.innerHTML = `<tr><td colspan="8">${emptyBlock('▣', 'پرونده‌ای یافت نشد', 'پرونده جدید اضافه کنید یا منتظر اتصال Backend بمانید.', 'افزودن پرونده', "openCaseForm()")}</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="8">${emptyBlock('▣', 'پرونده‌ای یافت نشد', emptyDataHint('پرونده جدید اضافه کنید یا فیلتر را تغییر دهید.'), 'افزودن پرونده', "openCaseForm()")}</td></tr>`;
     return;
   }
   tb.innerHTML = list.map(c => `
@@ -2973,7 +3144,7 @@ async function deleteCase(id) {
     if (currentCaseId === id) { currentCaseId = null; showPage('cases', null); }
     renderCases();
     showToast('پرونده حذف شد');
-  } catch { uiBackendOnly('حذف پرونده'); }
+  } catch (e) { showToast(e.message || 'خطا در حذف پرونده'); }
 }
 function openSupervisionModal() {
   if (!currentCaseId) return;
@@ -2996,7 +3167,7 @@ async function submitSupervision() {
     closeModal('modal-supervision');
     openCaseDetail(currentCaseId);
     showToast('وضعیت به وقت نظارت تغییر کرد');
-  } catch { uiBackendOnly('ثبت وقت نظارت'); }
+  } catch (e) { showToast(e.message || 'خطا در ثبت وقت نظارت'); }
 }
 
 /* Clients */
@@ -3017,7 +3188,7 @@ function renderClients() {
   if (q) list = list.filter(c => [c.name, c.fname, c.lname, c.phone, c.national].join(' ').includes(q));
   const grid = document.getElementById('clients-grid');
   if (!list.length) {
-    grid.innerHTML = emptyBlock('◎', 'موکلی ثبت نشده', 'اطلاعات موکلین پس از Backend یا ثبت دستی نمایش داده می‌شود.', 'افزودن موکل', "openClientForm(false)");
+    grid.innerHTML = emptyBlock('◎', 'موکلی ثبت نشده', emptyDataHint('موکل جدید اضافه کنید.'), 'افزودن موکل', "openClientForm(false)");
     return;
   }
   grid.innerHTML = list.map(c => `
@@ -3067,7 +3238,7 @@ async function submitClientForm() {
     renderClients();
     if (currentCaseId) renderCaseDetailLists();
     showToast('موکل ذخیره شد');
-  } catch { uiBackendOnly('ثبت موکل'); }
+  } catch (e) { showToast(e.message || 'خطا در ثبت موکل'); }
 }
 async function deleteClient(id) {
   if (!confirm('حذف موکل؟')) return;
@@ -3077,7 +3248,7 @@ async function deleteClient(id) {
     await loadFromApi();
     renderClients();
     if (currentCaseId) renderCaseDetailLists();
-  } catch { uiBackendOnly('حذف موکل'); }
+  } catch (e) { showToast(e.message || 'خطا در حذف موکل'); }
 }
 
 /* Tasks */
@@ -3145,7 +3316,7 @@ async function submitTaskForm() {
     renderTasks();
     if (currentCaseId) renderCaseDetailLists();
     showToast('وظیفه ذخیره شد');
-  } catch { uiBackendOnly('ثبت وظیفه'); }
+  } catch (e) { showToast(e.message || 'خطا در ثبت وظیفه'); }
 }
 async function deleteTask(id) {
   if (!confirm('حذف وظیفه؟')) return;
@@ -3155,7 +3326,7 @@ async function deleteTask(id) {
     await loadFromApi();
     renderTasks();
     if (currentCaseId) renderCaseDetailLists();
-  } catch { uiBackendOnly('حذف وظیفه'); }
+  } catch (e) { showToast(e.message || 'خطا در حذف وظیفه'); }
 }
 
 /* Notes */
@@ -3179,13 +3350,19 @@ function renderNotes() {
     ? list.map(noteRowHtml).join('')
     : emptyBlock('✎', 'یادداشتی ثبت نشده', 'یادداشت‌ها با تاریخ ثبت و دسته‌بندی اینجا دیده می‌شوند.', 'افزودن یادداشت', "openNoteForm(false)");
 }
-function openNoteForm(forCase, id) {
+function openNoteForm(forCase, id, draft) {
   formContext.noteForCase = !!forCase;
   document.getElementById('nt-id').value = id || '';
   const n = id ? store.notes.find(x => x.id === id) : null;
-  document.getElementById('nt-title').value = n?.title || '';
-  document.getElementById('nt-cat').value = n?.cat || 'general';
-  document.getElementById('nt-body').value = n?.body || n?.text || '';
+  if (draft && !n) {
+    document.getElementById('nt-title').value = draft.title || '';
+    document.getElementById('nt-cat').value = draft.category || draft.cat || 'legal';
+    document.getElementById('nt-body').value = draft.body || draft.content || draft.text || '';
+  } else {
+    document.getElementById('nt-title').value = n?.title || '';
+    document.getElementById('nt-cat').value = n?.cat || 'general';
+    document.getElementById('nt-body').value = n?.body || n?.text || '';
+  }
   openModal('modal-note');
 }
 async function submitNoteForm() {
@@ -3240,7 +3417,7 @@ function renderDocs() {
   if (cat) list = list.filter(d => d.cat === cat);
   const grid = document.getElementById('docs-grid');
   if (!list.length) {
-    grid.innerHTML = emptyBlock('▤', 'سندی موجود نیست', 'اسناد پس از آپلود از طریق Backend اینجا فهرست می‌شوند.', '', '');
+    grid.innerHTML = emptyBlock('▤', 'سندی موجود نیست', emptyDataHint('با «بارگذاری سند» فایل را آپلود کنید.'), '', '');
     return;
   }
   grid.innerHTML = list.map(d => `
@@ -3441,6 +3618,76 @@ async function deleteEvent(id) {
   } catch (e) { showToast(e.message || 'خطا'); }
 }
 
+const MESSENGER_LINKS = {
+  bale: {
+    schemes: ['bale://', 'ble://'],
+    androidIntent: 'intent://web.bale.ai/#Intent;scheme=https;package=ir.nasim;end',
+    web: 'https://web.bale.ai/'
+  },
+  rubika: {
+    schemes: ['rubika://'],
+    web: 'https://web.rubika.ir/'
+  }
+};
+
+function tryOpenAppUrl(url) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.style.display = 'none';
+  a.setAttribute('rel', 'noopener noreferrer');
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function openExternalMessenger(platform) {
+  const cfg = MESSENGER_LINKS[platform];
+  if (!cfg) return;
+  let appOpened = false;
+  const onHide = () => {
+    if (document.visibilityState === 'hidden') appOpened = true;
+  };
+  document.addEventListener('visibilitychange', onHide);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid && cfg.androidIntent) {
+    tryOpenAppUrl(cfg.androidIntent);
+  } else {
+    tryOpenAppUrl(cfg.schemes[0]);
+  }
+  window.setTimeout(() => {
+    document.removeEventListener('visibilitychange', onHide);
+    if (!appOpened) {
+      window.open(cfg.web, '_blank', 'noopener,noreferrer');
+    }
+  }, 1400);
+}
+
+function renderComms() {
+  /* صفحه ارتباطات — میانبر خارجی؛ بدون وابستگی به API در UI */
+}
+
+function openCaseFinanceTab(caseId) {
+  openCaseDetail(caseId);
+  const tabBtn = document.querySelector('.tab-btn[data-tab="cd-finance"]');
+  switchCaseTab('cd-finance', tabBtn);
+}
+
+function renderFinance() {
+  const box = document.getElementById('finance-case-list');
+  if (!box) return;
+  if (!store.cases.length) {
+    box.innerHTML = emptyBlock('﷼', 'بدون پرونده', emptyDataHint('پس از ثبت پرونده، امور مالی آن را در جزئیات پرونده مدیریت کنید.'), 'افزودن پرونده', 'openCaseForm()');
+    return;
+  }
+  box.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>شماره</th><th>عنوان</th><th></th></tr></thead><tbody>
+    ${store.cases.map((c) => `<tr>
+      <td>${escapeHtml(c.num)}</td>
+      <td>${escapeHtml(c.title)}</td>
+      <td><button type="button" class="btn btn-sm btn-p" onclick="openCaseFinanceTab(${c.id})">امور مالی پرونده</button></td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
 /* AI / Templates */
 const aiSuggestions = [
   'یک لایحه دفاعیه نمونه بنویس',
@@ -3510,23 +3757,303 @@ async function sendAI() {
   renderAIMessages();
 }
 
-const TEMPLATES = [
-  { id:1, title:'لایحه دفاعیه', text:'ریاست محترم دادگاه...\n\nاینجانب به وکالت از موکل...' },
-  { id:2, title:'دادخواست', text:'ریاست محترم دادگاه...\n\nخواهان: ...\nخوانده: ...' },
-  { id:3, title:'قرارداد وکالت', text:'قرارداد وکالت دادگستری\n\nطرفین: ...' }
-];
-function renderTemplates() {
-  document.getElementById('templates-grid').innerHTML = TEMPLATES.map(t => `
-    <div class="card" style="cursor:pointer" onclick="openTemplate(${t.id})">
-      <div style="font-weight:700;margin-bottom:6px">${t.title}</div>
-      <div style="font-size:12px;color:var(--muted)">مشاهده قالب</div>
-    </div>`).join('');
+let tplListScope = 'all';
+let tplAllowedVariables = [];
+
+const TEMPLATE_CAT_LABELS = {
+  pleading: 'لایحه',
+  petition: 'دادخواست',
+  declaration: 'اظهارنامه',
+  contract: 'قرارداد',
+  court_request: 'درخواست قضایی',
+  office: 'اداری دفتر',
+  power_of_attorney: 'وکالتنامه',
+  letter: 'نامه',
+  other: 'سایر'
+};
+
+function setTemplateScope(scope, btn) {
+  tplListScope = scope;
+  document.querySelectorAll('#page-templates .cat-tab').forEach((b) => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderTemplates();
 }
-function openTemplate(id) {
-  const t = TEMPLATES.find(x => x.id === id);
-  document.getElementById('tpl-title').textContent = t.title;
-  document.getElementById('tpl-text').value = t.text;
+
+function isSystemTemplateId(id) {
+  return String(id || '').startsWith('system-');
+}
+
+async function loadTemplateVariables() {
+  if (!TOKEN || tplAllowedVariables.length) return;
+  try {
+    const data = await apiGet('/templates/variables');
+    tplAllowedVariables = data.variables || [];
+    const sel = document.getElementById('tpl-var-pick');
+    if (sel && tplAllowedVariables.length) {
+      sel.innerHTML =
+        '<option value="">— متغیر —</option>' +
+        tplAllowedVariables.map((v) => `<option value="${v}">{{${v}}}</option>`).join('');
+    }
+  } catch { /* ignore */ }
+}
+
+function tplInsertVariable() {
+  const sel = document.getElementById('tpl-var-pick');
+  const ta = document.getElementById('tpl-text');
+  if (!sel || !ta || !sel.value) return;
+  const ins = `{{${sel.value}}}`;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const val = ta.value;
+  ta.value = val.slice(0, start) + ins + val.slice(end);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = start + ins.length;
+}
+
+function tplInsertDate() {
+  const ta = document.getElementById('tpl-text');
+  if (!ta) return;
+  const d = new Date().toLocaleDateString('fa-IR');
+  const start = ta.selectionStart;
+  ta.value = ta.value.slice(0, start) + d + ta.value.slice(ta.selectionEnd);
+}
+
+function fillTemplateCaseSelect() {
+  const sel = document.getElementById('tpl-use-case');
+  if (!sel) return;
+  const opts = ['<option value="">— انتخاب پرونده —</option>'];
+  for (const c of store.cases || []) {
+    const label = escapeHtml(c.title || c.case_number || c.num || 'پرونده ' + c.id);
+    opts.push(`<option value="${c.id}">${label}</option>`);
+  }
+  sel.innerHTML = opts.join('');
+}
+
+async function refreshTemplatesFromApi() {
+  if (PREVIEW_MODE || !TOKEN) return;
+  try {
+    const data = await apiGet('/templates');
+    store.templates = (Array.isArray(data) ? data : []).map(t => ({
+      ...t,
+      cat: t.cat || t.category || 'other',
+      body: t.body || t.content || t.text || ''
+    }));
+  } catch (e) {
+    showToast(e.message || 'خطا در بارگذاری قالب‌ها');
+  }
+}
+
+function renderTemplates() {
+  const q = (document.getElementById('tpl-search')?.value || '').trim().toLowerCase();
+  const cat = document.getElementById('tpl-cat-filter')?.value || '';
+  let list = (store.templates || []).slice();
+  if (tplListScope === 'system') list = list.filter((t) => t.isSystem);
+  else if (tplListScope === 'mine') list = list.filter((t) => !t.isSystem);
+  if (cat) list = list.filter(t => (t.cat || t.category) === cat);
+  if (q) list = list.filter(t => String(t.title || '').toLowerCase().includes(q));
+  const grid = document.getElementById('templates-grid');
+  if (!grid) return;
+  if (!list.length) {
+    grid.innerHTML = emptyBlock(
+      '≡',
+      'قالبی یافت نشد',
+      TOKEN ? 'قالب جدید بسازید یا فیلتر را تغییر دهید.' : 'برای مدیریت قالب‌ها وارد شوید.',
+      TOKEN ? 'قالب جدید' : null,
+      TOKEN ? 'openTemplateForm()' : null
+    );
+    return;
+  }
+  grid.innerHTML = list.map(t => {
+    const tid = escapeHtml(String(t.id)).replace(/"/g, '&quot;');
+    const badge = t.isSystem ? '<span class="badge badge-soon" style="margin-top:6px">آماده</span>' : '<span class="badge badge-ready" style="margin-top:6px">شخصی</span>';
+    return `<div class="card" style="cursor:pointer" data-tpl-id="${tid}" onclick="openTemplateFormById(this.dataset.tplId)">
+      <div style="font-weight:700;margin-bottom:6px">${escapeHtml(t.title)}</div>
+      ${badge}
+      <div style="font-size:12px;color:var(--muted);margin:8px 0">${escapeHtml(TEMPLATE_CAT_LABELS[t.cat] || t.cat || '—')}</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;max-height:3.2em;overflow:hidden">${escapeHtml(String(t.body || '').slice(0, 120))}${(t.body || '').length > 120 ? '…' : ''}</div>
+      <div style="font-size:11px;color:var(--pl);margin-top:10px;font-weight:600">${t.isSystem ? 'باز کردن / نسخه شخصی' : 'ویرایش'}</div>
+    </div>`;
+  }).join('');
+}
+
+function openTemplateForm(id) {
+  openTemplateFormById(id || '');
+}
+
+function openTemplateFormById(id) {
+  if (PREVIEW_MODE || !TOKEN) { uiBackendOnly('قالب‌ها'); return; }
+  loadTemplateVariables();
+  fillTemplateCaseSelect();
+  const errEl = document.getElementById('tpl-form-err');
+  if (errEl) { errEl.hidden = true; errEl.textContent = ''; }
+  const t = id ? store.templates.find(x => String(x.id) === String(id)) : null;
+  const isSys = t?.isSystem || isSystemTemplateId(id);
+  document.getElementById('tpl-id').value = t ? t.id : '';
+  document.getElementById('tpl-title-input').value = t?.title || '';
+  document.getElementById('tpl-title-input').readOnly = false;
+  document.getElementById('tpl-category').value = t?.cat || t?.category || 'petition';
+  document.getElementById('tpl-text').value = t?.body || t?.text || '';
+  document.getElementById('tpl-text').readOnly = false;
+  const notes = document.getElementById('tpl-usage-notes');
+  if (notes) {
+    const n = t?.usageNotes || t?.usage_notes || '';
+    if (n) { notes.textContent = n; notes.hidden = false; } else { notes.hidden = true; notes.textContent = ''; }
+  }
+  document.getElementById('tpl-modal-heading').textContent = t ? (isSys ? 'قالب آماده' : 'ویرایش قالب') : 'قالب جدید';
+  document.getElementById('tpl-btn-delete').hidden = !t || isSys;
+  document.getElementById('tpl-btn-dup').hidden = !isSys;
+  document.getElementById('tpl-btn-save').hidden = isSys;
+  document.getElementById('tpl-save-status').textContent = '';
   openModal('modal-template');
+}
+
+function readTemplateEditorPayload() {
+  return {
+    title: document.getElementById('tpl-title-input').value.trim(),
+    body: document.getElementById('tpl-text').value,
+    category: document.getElementById('tpl-category').value
+  };
+}
+
+async function saveTemplateForm() {
+  const { title, body, category } = readTemplateEditorPayload();
+  const errEl = document.getElementById('tpl-form-err');
+  if (!title) {
+    if (errEl) { errEl.textContent = 'عنوان قالب الزامی است.'; errEl.hidden = false; }
+    return;
+  }
+  if (!body.trim()) {
+    if (errEl) { errEl.textContent = 'متن قالب نمی‌تواند خالی باشد.'; errEl.hidden = false; }
+    return;
+  }
+  if (PREVIEW_MODE || !TOKEN) { uiBackendOnly('ذخیره قالب'); return; }
+  const id = document.getElementById('tpl-id').value;
+  if (isSystemTemplateId(id)) {
+    if (errEl) { errEl.textContent = 'قالب آماده را با «نسخه شخصی» یا «ذخیره با نام جدید» ذخیره کنید.'; errEl.hidden = false; }
+    return;
+  }
+  const payload = { title, body, category };
+  const statusEl = document.getElementById('tpl-save-status');
+  try {
+    if (statusEl) statusEl.textContent = 'در حال ذخیره…';
+    if (id) await apiSend('PUT', '/templates/' + encodeURIComponent(id), payload);
+    else await apiSend('POST', '/templates', payload);
+    await refreshTemplatesFromApi();
+    if (statusEl) statusEl.textContent = '';
+    closeModal('modal-template');
+    renderTemplates();
+    showToast('قالب ذخیره شد');
+  } catch (e) {
+    if (statusEl) statusEl.textContent = '';
+    const msg = e.message || 'خطا در ذخیره قالب';
+    if (errEl) { errEl.textContent = msg; errEl.hidden = false; }
+    else showToast(msg);
+  }
+}
+
+async function saveTemplateFormAsNew() {
+  document.getElementById('tpl-id').value = '';
+  await saveTemplateForm();
+}
+
+async function duplicateTemplateFromEditor() {
+  const id = document.getElementById('tpl-id').value;
+  if (!id || !isSystemTemplateId(id)) return;
+  const title = document.getElementById('tpl-title-input').value.trim();
+  try {
+    const { body, category } = readTemplateEditorPayload();
+    const created = await apiSend('POST', '/templates/' + encodeURIComponent(id) + '/duplicate', {
+      title: title || undefined,
+      body,
+      category
+    });
+    await refreshTemplatesFromApi();
+    if (created?.id) openTemplateFormById(created.id);
+    showToast('نسخه شخصی ایجاد شد');
+  } catch (e) { showToast(e.message || 'خطا در ایجاد نسخه'); }
+}
+
+async function previewTemplateDoc() {
+  const { body } = readTemplateEditorPayload();
+  const caseId = document.getElementById('tpl-use-case')?.value || null;
+  try {
+    const data = await apiSend('POST', '/templates/preview', {
+      body,
+      caseId: caseId ? Number(caseId) : undefined
+    });
+    document.getElementById('tpl-preview-body').textContent = data.rendered || '';
+    const unf = data.unfilled || [];
+    const panel = document.getElementById('tpl-vars-panel');
+    const box = document.getElementById('tpl-unfilled-vars');
+    if (unf.length && panel && box) {
+      panel.hidden = false;
+      box.textContent = 'متغیرهای پر نشده: ' + unf.map((v) => `{{${v}}}`).join('، ');
+    } else if (panel) panel.hidden = true;
+    if (data.variables?.unknown?.length) {
+      showToast('متغیر ناشناخته: ' + data.variables.unknown.join('، '));
+    }
+    openModal('modal-template-preview');
+  } catch (e) { showToast(e.message || 'خطا در پیش‌نمایش'); }
+}
+
+async function printTemplateDoc() {
+  await previewTemplateDoc();
+  const text = document.getElementById('tpl-preview-body').textContent || '';
+  const w = window.open('', '_blank');
+  if (!w) { showToast('پنجره چاپ مسدود شد'); return; }
+  w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>چاپ</title></head><body><pre style="font-family:inherit;white-space:pre-wrap">' + escapeHtml(text) + '</pre></body></html>');
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+async function downloadTemplateTxt() {
+  const { title, body } = readTemplateEditorPayload();
+  let text = body;
+  try {
+    const caseId = document.getElementById('tpl-use-case')?.value;
+    const data = await apiSend('POST', '/templates/preview', { body, caseId: caseId ? Number(caseId) : undefined });
+    text = data.rendered || body;
+  } catch { /* raw body */ }
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (title || 'template') + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+async function deleteTemplateConfirm() {
+  const id = document.getElementById('tpl-id').value;
+  if (!id) return;
+  if (!confirm('این قالب حذف شود؟')) return;
+  if (PREVIEW_MODE || !TOKEN) { uiBackendOnly('حذف قالب'); return; }
+  try {
+    await apiSend('DELETE', '/templates/' + encodeURIComponent(id));
+    await refreshTemplatesFromApi();
+    closeModal('modal-template');
+    renderTemplates();
+    showToast('قالب حذف شد');
+  } catch (e) { showToast(e.message || 'خطا در حذف قالب'); }
+}
+
+async function useTemplateInCaseNote() {
+  const caseId = document.getElementById('tpl-use-case')?.value;
+  const title = document.getElementById('tpl-title-input').value.trim();
+  const body = document.getElementById('tpl-text').value;
+  const errEl = document.getElementById('tpl-form-err');
+  if (!caseId) {
+    if (errEl) { errEl.textContent = 'یک پرونده برای درج یادداشت انتخاب کنید.'; errEl.hidden = false; }
+    return;
+  }
+  if (!title || !body.trim()) {
+    if (errEl) { errEl.textContent = 'قبل از درج، عنوان و متن قالب را تکمیل کنید.'; errEl.hidden = false; }
+    return;
+  }
+  currentCaseId = Number(caseId);
+  closeModal('modal-template');
+  openNoteForm(true, null, { title, body, category: 'legal' });
+  showToast('متن قالب در فرم یادداشت پرونده قرار گرفت — پس از بررسی ذخیره کنید.');
 }
 
 /* utils */
@@ -3548,7 +4075,7 @@ async function init() {
   const lawyerRegisterIntent = isLawyerRegisterIntent();
   if (!TOKEN && !CURRENT_USER && !lawyerRegisterIntent) {
     if (normPath(location.pathname) !== '/login') {
-      navTo('/login?next=' + encodeURIComponent('/'));
+      navTo('/login?next=' + encodeURIComponent('/app'));
     }
     return;
   }
@@ -3579,7 +4106,7 @@ async function init() {
           showLawyerRegisterGate();
           return;
         }
-        navTo('/login?next=' + encodeURIComponent('/'));
+        navTo('/login?next=' + encodeURIComponent('/app'));
         return;
       }
       if (meRes.ok) {

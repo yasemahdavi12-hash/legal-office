@@ -1,13 +1,14 @@
-/* قانون در جیب شما — Service Worker
+/* دادبان — Service Worker
  * Caches public static shell only.
  * NEVER caches /api/*, auth tokens, or private user data.
  */
-const CACHE_VERSION = 'legal-pwa-v4';
+const CACHE_VERSION = 'dadb-an-pwa-v5';
 const STATIC_CACHE = CACHE_VERSION + '-static';
+
+const OFFLINE_SHELL_PATHS = new Set(['/', '/app', '/offline.html']);
 
 const PRECACHE_URLS = [
   '/',
-  '/index.html',
   '/offline.html',
   '/manifest.json',
   '/icon-192.png',
@@ -110,16 +111,19 @@ async function networkFirstNavigation(request) {
       const cache = await caches.open(STATIC_CACHE);
       const url = new URL(request.url);
       // Cache only known shell paths
-      if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/offline.html') {
+      if (OFFLINE_SHELL_PATHS.has(url.pathname)) {
         cache.put(request, fresh.clone());
       }
     }
     return fresh;
   } catch {
-    const cached = await caches.match(request) ||
-      await caches.match('/index.html') ||
-      await caches.match('/');
+    const path = new URL(request.url).pathname;
+    const cached = await caches.match(request);
     if (cached) return cached;
+    if (OFFLINE_SHELL_PATHS.has(path)) {
+      const shell = await caches.match(path) || (path !== '/' ? await caches.match('/') : null);
+      if (shell) return shell;
+    }
     return (await caches.match('/offline.html')) ||
       new Response('آفلاین هستید', {
         status: 503,

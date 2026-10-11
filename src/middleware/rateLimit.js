@@ -15,6 +15,7 @@ function rateLimit({
 
   return async (req, res, next) => {
     try {
+      const maxLimit = typeof max === 'function' ? max(req) : max;
       const store = getRateLimitStore();
       const baseKey = keyGenerator
         ? keyGenerator(req)
@@ -35,13 +36,13 @@ function rateLimit({
         result = await mem.incr(baseKey, windowMs);
       }
 
-      const remaining = Math.max(0, max - result.count);
+      const remaining = Math.max(0, maxLimit - result.count);
       const resetSec = Math.max(1, Math.ceil(result.resetMs / 1000));
-      res.setHeader('X-RateLimit-Limit', String(max));
+      res.setHeader('X-RateLimit-Limit', String(maxLimit));
       res.setHeader('X-RateLimit-Remaining', String(remaining));
       res.setHeader('X-RateLimit-Reset', String(resetSec));
 
-      if (result.count > max) {
+      if (result.count > maxLimit) {
         res.setHeader('Retry-After', String(resetSec));
         return next(new AppError(message, 429));
       }

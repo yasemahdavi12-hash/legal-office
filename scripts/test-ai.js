@@ -242,10 +242,10 @@ async function main() {
   assert('9 rate limit → 429', last.status === 429, `status ${last.status}`);
 
   // Frontend must not embed key (avoid false positive on CSS class "task-item")
-  const idx = await req('GET', '/');
+  const idx = await req('GET', '/app');
   const html = String(idx.raw || '');
   assert(
-    '11b index.html has no AI secrets',
+    '11b lawyer app has no AI secrets',
     !html.includes(FAKE_KEY) && !html.includes('AI_API_KEY') && !/sk-[a-zA-Z0-9]{16,}/.test(html)
   );
 

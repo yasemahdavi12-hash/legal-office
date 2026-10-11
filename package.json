@@ -22,6 +22,7 @@
     "test:mehr-index": "node scripts/test-mehr-index-fixture.js && node scripts/test-mehr-calc-pure.js",
     "test:legal-tools": "node -r dotenv/config scripts/test-legal-tools.js",
     "test:mehr-calc": "node -r dotenv/config scripts/test-mehr-calc.js",
+    "test:templates": "node -r dotenv/config scripts/test-templates.js",
     "ci:production-deps": "npm ci --omit=optional"
   },
   "dependencies": {

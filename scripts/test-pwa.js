@@ -55,8 +55,8 @@ async function main() {
   assert('manifest status 200', man.status === 200, String(man.status));
   assert('manifest content-type', /manifest|json/i.test(man.headers['content-type'] || ''), man.headers['content-type']);
   const m = man.json;
-  assert('manifest name', m && m.name === 'قانون در جیب شما');
-  assert('manifest short_name', m && m.short_name === 'قانون');
+  assert('manifest name', m && m.name === 'دادبان');
+  assert('manifest short_name', m && m.short_name === 'دادبان');
   assert('manifest start_url /', m && m.start_url === '/');
   assert('manifest scope /', m && m.scope === '/');
   assert('manifest display standalone', m && m.display === 'standalone');
@@ -89,20 +89,31 @@ async function main() {
   const off = await req('GET', '/offline.html');
   assert('offline.html available', off.status === 200 && /آفلاین|اینترنت/.test(off.text));
 
-  // index PWA hooks (no design audit — just functional tags)
-  const idx = await req('GET', '/');
-  assert('index serves', idx.status === 200);
-  assert('index has manifest link', /rel=["']manifest["'][^>]*href=["']\/manifest\.json["']/i.test(idx.text) || /href=["']\/manifest\.json["'][^>]*rel=["']manifest["']/i.test(idx.text) || /manifest\.json/.test(idx.text));
-  assert('index theme-color', /theme-color[^>]+#0f2540/i.test(idx.text));
-  assert('index registers /sw.js', /serviceWorker\.register\(\s*['"]\/sw\.js['"]/.test(idx.text));
-  assert('index apple-touch-icon', /apple-touch-icon/.test(idx.text));
+  // Landing + lawyer app PWA hooks
+  const landing = await req('GET', '/');
+  assert('landing serves', landing.status === 200);
+  assert('landing is public (no app-layout)', !/id=["']app-layout["']/.test(landing.text));
+  assert('landing has manifest link', /manifest\.json/.test(landing.text));
+  assert('landing theme-color', /theme-color[^>]+#0f2540/i.test(landing.text));
+  assert('landing registers /sw.js', /serviceWorker\.register\(\s*['"]\/sw\.js['"]/.test(landing.text));
+
+  const app = await req('GET', '/app');
+  assert('lawyer app serves', app.status === 200);
+  assert('lawyer app has app-layout', /id=["']app-layout["']/.test(app.text));
+  assert('lawyer app apple-touch-icon', /apple-touch-icon/.test(app.text));
+
+  const idxRedirect = await req('GET', '/index.html');
+  assert('index.html redirects to /app', idxRedirect.status === 302 && /\/app/.test(idxRedirect.headers.location || ''));
+
+  const missing = await req('GET', '/no-such-page-xyz');
+  assert('unknown HTML route 404', missing.status === 404);
 
   // HTTPS posture for production API base (relative/origin-based)
   assert(
     'production API uses location.origin (HTTPS-safe)',
-    /location\.origin\s*\+\s*['"]\/api['"]/.test(idx.text)
+    /location\.origin\s*\+\s*['"]\/api['"]/.test(app.text)
   );
-  assert('no hardcoded https-insecure prod API host', !/http:\/\/(?!localhost|127\.0\.0\.1)/i.test(idx.text));
+  assert('no hardcoded https-insecure prod API host', !/http:\/\/(?!localhost|127\.0\.0\.1)/i.test(app.text));
 
   // Installability checklist (server-side proxies)
   assert(

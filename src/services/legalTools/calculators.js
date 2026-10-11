@@ -145,6 +145,7 @@ async function mehrCalc(body) {
     const missingYears = missingYearsWhenNoStore(body);
     throw new AppError(INDEX_NOT_AVAILABLE_MESSAGE, 422, {
       code: 'INDEX_NOT_AVAILABLE',
+      datasetEmpty: true,
       missingYears
     });
   }

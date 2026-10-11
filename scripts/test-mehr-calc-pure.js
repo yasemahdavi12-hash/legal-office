@@ -51,6 +51,25 @@ const normal = calculateMehrPure(
   'test-mehr-index-fixture-v1'
 );
 assert('normal calculation', normal.calculatedAmount === 2_000_000, String(normal.calculatedAmount));
+
+const multiYear = calculateMehrPure(
+  {
+    amount: 5_000_000,
+    currency: 'IRR',
+    contractYear: 1388,
+    basisType: 'payment',
+    paymentYear: 1400
+  },
+  testStore,
+  'test-mehr-index-fixture-v1'
+);
+assert(
+  'multi-year gap contract 1388 payment 1400',
+  multiYear.contractIndex === 80 &&
+    multiYear.paymentIndex === 200 &&
+    multiYear.calculatedAmount === 12_500_000,
+  String(multiYear.calculatedAmount)
+);
 assert('normal IRR currency', normal.currency === 'IRR' && normal.inputCurrency === 'IRR');
 assert('response formula contract', normal.formula === 'M × I_prev / I_contract');
 assert('paymentBasis field', normal.paymentBasis === 'payment');
@@ -208,6 +227,24 @@ expectIndexMissing('missing contract index', () =>
     testStore
   )
 );
+try {
+  calculateMehrPure(
+    {
+      amount: 1_000_000,
+      currency: 'IRR',
+      contractYear: 1370,
+      basisType: 'payment',
+      paymentYear: 1400
+    },
+    testStore
+  );
+} catch (e) {
+  assert(
+    'missing contract year in details',
+    e.details?.missingYears?.includes(1370),
+    String(e.details?.missingYears)
+  );
+}
 
 expectIndexMissing('missing numerator index paymentYear 1403', () =>
   calculateMehrPure(
@@ -312,6 +349,39 @@ expectIndexMissing('deathYear 1403 INDEX_NOT_AVAILABLE', () =>
     auditStore
   )
 );
+
+expectValidation('overflow amount in rial', () =>
+  calculateMehrPure(
+    {
+      amount: Number.MAX_SAFE_INTEGER,
+      currency: 'IRR',
+      contractYear: 1390,
+      basisType: 'payment',
+      paymentYear: 1400
+    },
+    testStore
+  )
+);
+
+expectValidation('overflow calculated raw', () => {
+  const hugeStore = new MehrIndexStore(
+    new Map([
+      [1390, 1],
+      [1399, Number.MAX_SAFE_INTEGER]
+    ]),
+    []
+  );
+  calculateMehrPure(
+    {
+      amount: Number.MAX_SAFE_INTEGER - 1,
+      currency: 'IRR',
+      contractYear: 1390,
+      basisType: 'payment',
+      paymentYear: 1400
+    },
+    hugeStore
+  );
+});
 
 const badStore = new MehrIndexStore(new Map([[1390, -1]]), []);
 try {
